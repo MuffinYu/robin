@@ -1,0 +1,33 @@
+{
+  "name": "Robin Blog",
+  "short_name": "Robin",
+  "icons": [{
+      "src": "asserts/icon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }, {
+    "src": "asserts/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    }, {
+      "src": "asserts/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    }, {
+      "src": "asserts/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    }, {
+      "src": "asserts/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }, {
+      "src": "asserts/icon-256x256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }],
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#212121",
+  "theme_color": "#212121"
+}

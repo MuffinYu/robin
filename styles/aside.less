@@ -1,0 +1,135 @@
+.sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  z-index: 1040;
+  box-shadow: inset 0 2px 6px #000;
+  background: #222;
+  // margin-left: auto;
+  margin-top: 361px;
+}
+.sidebar a,
+.sidebar span.exturl {
+  color: #999;
+  border-bottom-color: #555;
+}
+.sidebar a:hover,
+.sidebar span.exturl:hover {
+  color: #eee;
+  border-bottom-color: #eee;
+}
+.sidebar {
+  position: static;
+  float: left;
+  // margin-left: -100%;
+  width: 240px;
+  background: #eee;
+  box-shadow: none;
+}
+@media (max-width: 991px) {
+  .sidebar {
+    display: none;
+  }
+}
+.sidebar-toggle {
+  display: none;
+}
+.sidebar-position-right .header-inner {
+  right: 0;
+}
+.sidebar-position-right .content-wrap {
+  float: left;
+}
+.sidebar-position-right .sidebar {
+  float: right;
+}
+.sidebar-position-right .footer-inner {
+  padding-left: 0;
+  padding-right: 260px;
+}
+
+.use-motion .sidebar .motion-element {
+  opacity: 1;
+}
+.sidebar {
+  right: auto;
+  bottom: auto;
+  -webkit-transform: none;
+}
+.sidebar a,
+.sidebar span.exturl {
+  color: #555;
+}
+.sidebar a:hover,
+.sidebar span.exturl:hover {
+  color: #222;
+  border-bottom-color: #222;
+}
+.sidebar-inner {
+  box-sizing: border-box;
+  width: 240px;
+  // color: #555;
+  background: #fff;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.12),
+    0 3px 1px -2px rgba(0, 0, 0, 0.06), 0 1px 5px 0 rgba(0, 0, 0, 0.12),
+    0 -1px 0.5px 0 rgba(0, 0, 0, 0.09);
+  border-radius: initial;
+  position: relative;
+  padding: 20px 10px;
+  color: #999;
+  text-align: center;
+}
+
+.sidebar-inner.affix {
+  position: fixed;
+  top: 12px;
+}
+.sidebar-inner.affix-bottom {
+  position: absolute;
+}
+
+.site-overview-wrap {
+  overflow: hidden;
+}
+.site-overview {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.site-author-image {
+  display: block;
+  margin: 0 auto;
+  padding: 2px;
+  max-width: 64px;
+  height: auto;
+  border: 1px solid #eee;
+  opacity: 1;
+  border-radius: 100%;
+}
+.site-author-name {
+  margin: 0;
+  text-align: center;
+  color: #222;
+  font-weight: 600;
+}
+.site-description {
+  margin-top: 0;
+  text-align: center;
+  font-size: 13px;
+  color: #999;
+}
+
+.back-to-top {
+  // visibility: hidden;
+  margin: 8px -10px -20px;
+  background: #eee;
+  font-size: 14px;
+  opacity: 0.6;
+  cursor: pointer;
+  text-align: center;
+}
+.back-to-top:hover {
+  opacity: 0.8;
+}
