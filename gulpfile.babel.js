@@ -13,7 +13,7 @@ var through = require('through2');
 var reload = browserSync.reload;  
 var { parallel, series } = gulp;
 var config = {
-  output: "./dist",
+  output: "./docs",
 };
 
 function postPick() {
@@ -27,10 +27,11 @@ function postPick() {
   }).then(files => {
     return Promise.all(files.map(file => {
       return new Promise((resolve1, reject1) => {
+        console.log("file postPick", file);
         fs.readFile(path.join(post, file), (err, data) => {
           if (err) {
             resolve1({});
-            return console.error(err);
+            return console.error("readFile", err, file);
           } else {
             const content = JSON.parse(data.toString());
             content.href = content.title.trim().replace(/\s+/g, '-');
@@ -85,6 +86,9 @@ function compileEjs(done) {
   postPick().then((content) => {
     Promise.all(content.map(makeArchives).concat(makeIndex(content)))
            .then((res) => done())
+           .catch((err) => {
+             console.log("compileEjs err", err);
+           })
   });
 }
 
