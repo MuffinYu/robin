@@ -12,8 +12,12 @@ var through = require('through2');
 
 var reload = browserSync.reload;  
 var { parallel, series } = gulp;
+var config = {
+  output: "./dist",
+};
+
 function postPick() {
-  const post = './dist/posts';
+  const post = config.output + '/posts';
   // let briefPost = [];
   return new Promise((resolve, reject) => {
     fs.readdir(post, (err, files) => {
@@ -55,7 +59,7 @@ function makeIndex(content) {
         .pipe(ejs({
           brief: brief,
         }, {}, { ext: '.html' }))
-        .pipe(gulp.dest("./dist"))
+        .pipe(gulp.dest( config.output ))
         .pipe(reload({ stream: true }))
         .pipe(resolve());
   })
@@ -64,11 +68,15 @@ function makeIndex(content) {
 function makeArchives(item) {
   return new Promise((resolve, reject) => {
     ejsCompiler.renderFile('./views/article_brief.ejs', item, (err, str) => {
-      fs.writeFile(`./dist/archives/${item.href}.html`, str, (err) => {
-        if (err) throw err;
-        console.log('文件已被保存');
-        resolve();
-      })
+      fs.writeFile(
+        `${config.output}/archives/${item.href}.html`,
+        str,
+        err => {
+          if (err) throw err;
+          console.log("文件已被保存");
+          resolve();
+        }
+      );
     });
   })
 }
@@ -85,7 +93,7 @@ function compileLess() {
     .pipe(less({
       paths: [ path.join(__dirname, 'less', 'includes') ]
     }))
-    .pipe(gulp.dest("./dist/styles"))
+    .pipe(gulp.dest(config.output + "/styles"))
     .pipe(reload({ stream: true }))
 }
 
@@ -106,12 +114,15 @@ marked.setOptions({
 });
 
 function compileMarkdown() {
-  return gulp.src("./posts/*.md")
-    .pipe(markdownToJSON(marked))
-    .pipe(gulp.dest('./dist/posts'))
-    // .pipe(makeArchives())
-    // .pipe(gulp.dest('./dist/archives'))
-    .pipe(reload({ stream: true }));
+  return (
+    gulp
+      .src("./posts/*.md")
+      .pipe(markdownToJSON(marked))
+      .pipe(gulp.dest(config.output + "/posts"))
+      // .pipe(makeArchives())
+      // .pipe(gulp.dest('./dist/archives'))
+      .pipe(reload({ stream: true }))
+  );
     // return done();
 }
 /*
@@ -124,12 +135,12 @@ function compileJs() {
       babel({
         presets: [
           [
-            '@babel/preset-env',
+            "@babel/preset-env",
             {
               targets: {
-                browsers: ['safari>=9', 'android>=5', 'ios>=9'] //可取值：chrome, opera, edge, firefox, safari, ie, ios, android, node, electron.
+                browsers: ["safari>=9", "android>=5", "ios>=9"] //可取值：chrome, opera, edge, firefox, safari, ie, ios, android, node, electron.
               },
-              modules: 'umd', //可取值"amd" | "umd" | "systemjs" | "commonjs" | false, defaults to "commonjs".
+              modules: "umd", //可取值"amd" | "umd" | "systemjs" | "commonjs" | false, defaults to "commonjs".
               useBuiltIns: false, //使用'babel-polyfill'
               debug: false //这里按server环境来区分是否debug有些欠妥 以后遇到问题再改 @liuxuefeng 20180306
             }
@@ -138,20 +149,20 @@ function compileJs() {
         plugins: ["@babel/plugin-transform-runtime"]
       })
     )
-    .pipe(gulp.dest("./dist/scripts"))
-    .pipe(reload({ stream: true }))
+    .pipe(gulp.dest(config.output + "/scripts"))
+    .pipe(reload({ stream: true }));
 }
 // 复制静态资源
 function copyAsserts() {
   return gulp
     .src("./asserts/*")
-    .pipe(gulp.dest("./dist/asserts"))
+    .pipe(gulp.dest(config.output + "/asserts"))
     .pipe(reload({ stream: true }));
 }
 function copyPWA() {
   return gulp
     .src(["./favicon.ico", "./manifest.json", "./service-worker.js"])
-    .pipe(gulp.dest("./dist"))
+    .pipe(gulp.dest(config.output))
     .pipe(reload({ stream: true }));
 }
 
@@ -168,7 +179,7 @@ gulp.task('server', function() {
   browserSync.init({
     watch: true,
     server: {
-      baseDir: "./dist",
+      baseDir: config.output,
       index: "index.html"
     },
     port: 8886,
