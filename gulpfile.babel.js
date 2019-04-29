@@ -12,8 +12,14 @@ var through = require('through2');
 
 var reload = browserSync.reload;  
 var { parallel, series } = gulp;
+
 var config = {
   output: "./docs",
+  copyFiles: [
+    "./src/favicon.ico",
+    "./src/manifest.json",
+    "./src/service-worker.js"
+  ]
 };
 
 function postPick() {
@@ -56,19 +62,26 @@ function makeIndex(content) {
     createAt: createAt ? new Date(createAt).toISOString().split('T')[0] : '-',
   }));
   return new Promise((resolve, reject) => {
-    gulp.src("./*.ejs")
-        .pipe(ejs({
-          brief: brief,
-        }, {}, { ext: '.html' }))
-        .pipe(gulp.dest( config.output ))
-        .pipe(reload({ stream: true }))
-        .pipe(resolve());
+    gulp
+      .src("./src/*.ejs")
+      .pipe(
+        ejs(
+          {
+            brief: brief
+          },
+          {},
+          { ext: ".html" }
+        )
+      )
+      .pipe(gulp.dest(config.output))
+      .pipe(reload({ stream: true }))
+      .pipe(resolve());
   })
 }
 
 function makeArchives(item) {
   return new Promise((resolve, reject) => {
-    ejsCompiler.renderFile('./views/article_brief.ejs', item, (err, str) => {
+    ejsCompiler.renderFile('./src/views/article_brief.ejs', item, (err, str) => {
       fs.writeFile(
         `${config.output}/archives/${item.href}.html`,
         str,
@@ -93,12 +106,15 @@ function compileEjs(done) {
 }
 
 function compileLess() {
-  return gulp.src("./styles/index.less")
-    .pipe(less({
-      paths: [ path.join(__dirname, 'less', 'includes') ]
-    }))
+  return gulp
+    .src("./src/styles/index.less")
+    .pipe(
+      less({
+        paths: [path.join(__dirname, "less", "includes")]
+      })
+    )
     .pipe(gulp.dest(config.output + "/styles"))
-    .pipe(reload({ stream: true }))
+    .pipe(reload({ stream: true }));
 }
 
 // function makeArchives() {
@@ -120,7 +136,7 @@ marked.setOptions({
 function compileMarkdown() {
   return (
     gulp
-      .src("./posts/*.md")
+      .src("./src/posts/*.md")
       .pipe(markdownToJSON(marked))
       .pipe(gulp.dest(config.output + "/posts"))
       // .pipe(makeArchives())
@@ -134,7 +150,7 @@ function compileMarkdown() {
  */
 function compileJs() {
   return gulp
-    .src(["./scripts/*.js"])
+    .src(["./src/scripts/*.js"])
     .pipe(
       babel({
         presets: [
@@ -159,13 +175,13 @@ function compileJs() {
 // 复制静态资源
 function copyAsserts() {
   return gulp
-    .src("./asserts/*")
+    .src("./src/asserts/*")
     .pipe(gulp.dest(config.output + "/asserts"))
     .pipe(reload({ stream: true }));
 }
 function copyPWA() {
   return gulp
-    .src(["./favicon.ico", "./manifest.json", "./service-worker.js"])
+    .src(config.copyFiles)
     .pipe(gulp.dest(config.output))
     .pipe(reload({ stream: true }));
 }
@@ -197,10 +213,13 @@ gulp.task('server', function() {
        */
       ready: function(err, bs) {
         console.log('无需再按F5刷新啦！！');
-        gulp.watch(["./scripts/*.js"], gulp.series('js'));
-        gulp.watch(["./*.ejs", "./views/*.ejs"], gulp.series('ejs'));
-        gulp.watch(["./styles/*.less"], gulp.series('less'));
-        gulp.watch(["./posts/*.md"], gulp.series('markdown'));
+        gulp.watch(["./src/scripts/*.js"], gulp.series('js'));
+        gulp.watch(
+          ["./src/*.ejs", "./src/views/*.ejs"],
+          gulp.series("ejs")
+        );
+        gulp.watch(["./src/styles/*.less"], gulp.series("less"));
+        gulp.watch(["./src/posts/*.md"], gulp.series("markdown"));
         // var ejsWatcher = gulp.watch(["./*.ejs", "./views/*.ejs"], function(event) {
         //   console.log('ejs: File ' + event.path + ' was ' + event.type + ', running tasks...');
         //   return compileEjs().pipe(browserSync.reload({ stream: true }));
