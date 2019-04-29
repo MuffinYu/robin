@@ -18,7 +18,7 @@ var filesToCache = [
   // // '/images/snow.png',
   // // '/images/thunderstorm.png',
   // // '/images/wind.png'
-  "/",
+  // "/",
   "./index.html",
   "./scripts/index.js",
   "./styles/index.css",
