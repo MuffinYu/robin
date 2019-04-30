@@ -114,6 +114,10 @@ self.addEventListener("fetch", function(e) {
           cache.put(url, resClone);
         });
         return response;
+      }).catch(function(err) {
+        console.log("fetch err", err);
+        return caches.match(e.request.url);
+        // throw err;
       });
     } catch (error) {
       console.log("fetch fall back", error);
