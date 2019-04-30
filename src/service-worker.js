@@ -1,3 +1,5 @@
+import { log } from "util";
+
 var dataCacheName = 'RobinBlog-v1'; // 缓存数据 辨识
 var cacheName = 'RobinBlog-asserts-1'; // 缓存应用静态文件 辨识  
 var filesToCache = [
@@ -69,7 +71,7 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   console.log('[Service Worker] Fetch', e.request.url);
-  var dataUrl = 'https://query.yahooapis.com/v1/public/yql';
+  var dataUrl = "https://muffinyu.github.io/robin";
   if (e.request.url.indexOf(dataUrl) > -1) {
     /*
      * When the request URL contains dataUrl, the app is asking for fresh
@@ -94,6 +96,8 @@ self.addEventListener('fetch', function(e) {
      */
     e.respondWith(
       caches.match(e.request).then(function(response) {
+        console.log('caches match', response);
+        
         return response || fetch(e.request);
       })
     );
