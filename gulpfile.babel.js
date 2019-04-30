@@ -220,6 +220,7 @@ gulp.task('server', function() {
         );
         gulp.watch(["./src/styles/*.less"], gulp.series("less"));
         gulp.watch(["./src/posts/*.md"], gulp.series("markdown"));
+        gulp.watch(config.copyFiles, gulp.series("copy"));
         // var ejsWatcher = gulp.watch(["./*.ejs", "./views/*.ejs"], function(event) {
         //   console.log('ejs: File ' + event.path + ' was ' + event.type + ', running tasks...');
         //   return compileEjs().pipe(browserSync.reload({ stream: true }));

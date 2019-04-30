@@ -108,8 +108,10 @@ self.addEventListener("fetch", function(e) {
     try {
       return fetch(e.request).then(function(response) {
         console.log("fetch ok", response);
+        var resClone = response.clone();
+        var url = e.request.url;
         caches.open(cacheName).then(function(cache) {
-          cache.put(e.request.url, response.clone());
+          cache.put(url, resClone);
         });
         return response;
       });
