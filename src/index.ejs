@@ -5,7 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <!-- <link rel="canonical" href="https://weather-pwa-sample.firebaseapp.com/final/"> -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Robin's blog</title>
+  <title>Robin·学习博客</title>
   <link rel="stylesheet" type="text/css" href="styles/iconfont.css">
   <link rel="stylesheet" type="text/css" href="styles/index.css">
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
@@ -14,15 +14,21 @@
   <!-- Add to home screen for Safari on iOS -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Robin's blog">
+  <meta name="apple-mobile-web-app-title" content="Robin·学习博客">
   <link rel="apple-touch-icon" href="asserts/icon-152x152.png">
   <meta name="msapplication-TileImage" content="asserts/icon-144x144.png">
   <meta name="msapplication-TileColor" content="#212121">
   <meta name="theme-color" content='#212121'>
+  <meta name="Description" content="前端技术博客，学习和分享React,JS,CSS,http学习经验和心得～">
+  
 </head>
 <body>
   <div class='container'>
+    <div class='headband'>
+      <!-- <span></span> -->
+    </div>
     <%- include('views/header', { brief: brief }) %>
+    <%- include('views/github_corner') %>
     <main class="main" id="main" >
       <div class='main-inner'>
         <div class="content-wrap">

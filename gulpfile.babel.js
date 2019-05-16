@@ -13,8 +13,10 @@ var through = require('through2');
 var reload = browserSync.reload;  
 var { parallel, series } = gulp;
 
+// console.log("argv: ", process.argv);
+const isDev = process.argv.include('--dev'); // 开发模式
 var config = {
-  output: "./docs",
+  output: isDev ? './dist' : "./docs",
   copyFiles: [
     "./src/favicon.ico",
     "./src/manifest.json",
@@ -81,6 +83,8 @@ function makeIndex(content) {
 
 function makeArchives(item) {
   return new Promise((resolve, reject) => {
+    item.createAt = new Date(item.createAt).toISOString().split("T")[0];
+    item.updatedAt = new Date(item.updatedAt).toISOString().split("T")[0];
     ejsCompiler.renderFile('./src/views/article_brief.ejs', item, (err, str) => {
       fs.writeFile(
         `${config.output}/archives/${item.href}.html`,
