@@ -18,9 +18,9 @@ var filesToCache = [
   // // '/images/snow.png',
   // // '/images/thunderstorm.png',
   // // '/images/wind.png'
-  "/",
-  "/index.html",
-  "/scripts/index.js",
+  // "/",
+  "./index.html",
+  "./scripts/index.js",
   "./styles/index.css",
   "./styles/iconfont.css",
   "./favicon.ico",
@@ -67,35 +67,62 @@ self.addEventListener('activate', function(e) {
   return self.clients.claim();
 });
 
-self.addEventListener('fetch', function(e) {
-  console.log('[Service Worker] Fetch', e.request.url);
-  var dataUrl = 'https://query.yahooapis.com/v1/public/yql';
-  if (e.request.url.indexOf(dataUrl) > -1) {
-    /*
-     * When the request URL contains dataUrl, the app is asking for fresh
-     * weather data. In this case, the service worker always goes to the
-     * network and then caches the response. This is called the "Cache then
-     * network" strategy:
-     * https://jakearchibald.com/2014/offline-cookbook/#cache-then-network
-     */
-    e.respondWith(
-      caches.open(dataCacheName).then(function(cache) {
-        return fetch(e.request).then(function(response){
-          cache.put(e.request.url, response.clone());
-          return response;
+// self.addEventListener('fetch', function(e) {
+//   console.log('[Service Worker] Fetch', e.request.url);
+//   var dataUrl = "https://muffinyu.github.io/robin";
+//   if (e.request.url.indexOf(dataUrl) > -1) {
+//     /*
+//      * When the request URL contains dataUrl, the app is asking for fresh
+//      * weather data. In this case, the service worker always goes to the
+//      * network and then caches the response. This is called the "Cache then
+//      * network" strategy:
+//      * https://jakearchibald.com/2014/offline-cookbook/#cache-then-network
+//      */
+//     e.respondWith(
+//       caches.open(dataCacheName).then(function(cache) {
+//         return fetch(e.request).then(function(response){
+//           cache.put(e.request.url, response.clone());
+//           return response;
+//         });
+//       })
+//     );
+//   } else {
+//     /*
+//      * The app is asking for app shell files. In this scenario the app uses the
+//      * "Cache, falling back to the network" offline strategy:
+//      * https://jakearchibald.com/2014/offline-cookbook/#cache-falling-back-to-network
+//      */
+//     e.respondWith(
+//       caches.match(e.request).then(function(response) {
+//         console.log('caches match', response);
+        
+//         return response || fetch(e.request);
+//       })
+//     );
+//   }
+// });
+
+
+self.addEventListener("fetch", function(e) {
+  function getResponse(e) {
+    try {
+      return fetch(e.request).then(function(response) {
+        console.log("fetch ok", response);
+        var resClone = response.clone();
+        var url = e.request.url;
+        caches.open(cacheName).then(function(cache) {
+          cache.put(url, resClone);
         });
-      })
-    );
-  } else {
-    /*
-     * The app is asking for app shell files. In this scenario the app uses the
-     * "Cache, falling back to the network" offline strategy:
-     * https://jakearchibald.com/2014/offline-cookbook/#cache-falling-back-to-network
-     */
-    e.respondWith(
-      caches.match(e.request).then(function(response) {
-        return response || fetch(e.request);
-      })
-    );
+        return response;
+      }).catch(function(err) {
+        console.log("fetch err", err);
+        return caches.match(e.request.url);
+        // throw err;
+      });
+    } catch (error) {
+      console.log("fetch fall back", error);
+      return caches.match(e.request.url);
+    }
   }
+  e.respondWith(getResponse(e));
 });

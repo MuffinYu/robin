@@ -5,21 +5,29 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <!-- <link rel="canonical" href="https://weather-pwa-sample.firebaseapp.com/final/"> -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Robin's blog</title>
-  <link rel="stylesheet" type="text/css" href="styles/index.css">
+  <title>Robin·学习博客</title>
   <link rel="stylesheet" type="text/css" href="styles/iconfont.css">
+  <link rel="stylesheet" type="text/css" href="styles/index.css">
+  <link rel="stylesheet" type="text/css" href="styles/markdown-body.css">
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
   <!-- TODO add manifest here -->
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="./manifest.json">
   <!-- Add to home screen for Safari on iOS -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Robin's blog">
+  <meta name="apple-mobile-web-app-title" content="Robin·学习博客">
   <link rel="apple-touch-icon" href="asserts/icon-152x152.png">
   <meta name="msapplication-TileImage" content="asserts/icon-144x144.png">
-  <meta name="msapplication-TileColor" content="#2F3BA2">
+  <meta name="msapplication-TileColor" content="#212121">
+  <meta name="theme-color" content='#212121'>
+  <meta name="Description" content="前端技术博客，学习和分享React,JS,CSS,http学习经验和心得～">
+  
 </head>
 <body>
   <div class='container'>
+    <div class='headband'>
+      <!-- <span></span> -->
+    </div>
     <header id='header' class='header'>
 <div class = "header-inner">
   <div class="site-brand-wrapper">
@@ -29,7 +37,7 @@
           <span class="logo-line-before">
             <i></i>
           </span>
-          <span class="site-title">Robin'ssssaas blog</span>
+          <span class="site-title">Robin's blog</span>
           <span class="logo-line-after">
             <i></i>
           </span>
@@ -48,7 +56,7 @@
   <nav class="site-nav" style = "display: none;">
     <ul id="menu" class="menu">
       <li class="menu-item menu-item-news">
-        <a href="/" rel="section">
+        <a href="./" rel="section">
           <i class="menu-item-icon fa iconfont icon-bull-horn"></i>
           <br>News
         </a>
@@ -59,11 +67,11 @@
         <br>Docs</a>
       </li>
       <li class="menu-item menu-item-archives">
-        <a href="/archives/" rel="section">
+        <a href="/#/archive" rel="section">
           <i class="menu-item-icon fa iconfont icon-archive"></i>
           <br>Archives
           <span class="badge">
-            3
+            4
           </span>
         </a>
       </li>
@@ -100,6 +108,22 @@
 <div id="nav-popup" class="nav-popup">
 </div>
 <nav class='nav-popup-menu' id='nav-popup-menu'></nav>
+    <span class="exturl github-corner" data-url="aHR0cHM6Ly9naXRodWIuY29tL3RoZW1lLW5leHQvaGV4by10aGVtZS1uZXh0"
+  title="Star Robin on GitHub" aria-label="Star Robin on GitHub">
+  <a href="https://github.com/MuffinYu/robin" target="_blank" rel="GitHub">
+    <svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true">
+      <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+      <path
+        d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+        fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm">
+      </path>
+      <path
+        d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+        fill="currentColor" class="octo-body">
+      </path>
+    </svg>
+  </a>
+</span>
     <main class="main" id="main" >
       <div class='main-inner'>
         <div class="content-wrap">
@@ -110,7 +134,7 @@
   <div class="post-block">
     <header class="post-header">
       <h2 class="post-title" itemprop="name headline">
-        <a href='#/archive/Wes-Anderson-pop-up-Bushwick-artisan' class="post-title-link" itemprop="url">Wes Anderson pop-up Bushwick artisan</a>
+        <a href='#/archive/markdown-test' class="post-title-link" itemprop="url">markdown-test</a>
       </h2>
       <div class="post-meta">
         <span class="post-time">
@@ -118,13 +142,13 @@
             <i class="fa fa-calendar-o"></i>
           </span>
           <span class="post-meta-item-text">发布:</span>
-          <time title="Created: 2018-12-01 10:01:55" itemprop="dateCreated datePublished" datetime="2018-12-01T10:01:55Z">2019-04-23</time>
+          <time title="Created: 2019-05-18" itemprop="dateCreated datePublished" datetime="2019-05-18">2019-05-18</time>
           <span class="post-meta-divider">|</span>
           <span class="post-meta-item-icon">
             <i class="fa fa-calendar-check-o"></i>
           </span>
           <span class="post-meta-item-text">更新:</span>
-          <time title="Modified: 2019-04-17 04:06:47" itemprop="dateModified" datetime="2019-04-17T04:06:47Z">2019-04-23</time>
+          <time title="Modified:2019-05-18" itemprop="dateModified" datetime="2019-05-18">2019-05-18</time>
         </span>
         <!-- <span class="post-comments-count">
           <span class="post-meta-divider">|</span>
@@ -139,7 +163,9 @@
       </div>
     </header>
     <div class="post-body">
-      
+      <div class="markdown-body">
+        
+      </div>
     </div>
   </div>
 </article>
@@ -156,13 +182,13 @@
             <i class="fa fa-calendar-o"></i>
           </span>
           <span class="post-meta-item-text">发布:</span>
-          <time title="Created: 2018-12-01 10:01:55" itemprop="dateCreated datePublished" datetime="2018-12-01T10:01:55Z">2019-04-23</time>
+          <time title="Created: 2019-04-23" itemprop="dateCreated datePublished" datetime="2019-04-23">2019-04-23</time>
           <span class="post-meta-divider">|</span>
           <span class="post-meta-item-icon">
             <i class="fa fa-calendar-check-o"></i>
           </span>
           <span class="post-meta-item-text">更新:</span>
-          <time title="Modified: 2019-04-17 04:06:47" itemprop="dateModified" datetime="2019-04-17T04:06:47Z">2019-04-23</time>
+          <time title="Modified:2019-04-23" itemprop="dateModified" datetime="2019-04-23">2019-04-23</time>
         </span>
         <!-- <span class="post-comments-count">
           <span class="post-meta-divider">|</span>
@@ -177,7 +203,9 @@
       </div>
     </header>
     <div class="post-body">
-      
+      <div class="markdown-body">
+        
+      </div>
     </div>
   </div>
 </article>
@@ -194,13 +222,13 @@
             <i class="fa fa-calendar-o"></i>
           </span>
           <span class="post-meta-item-text">发布:</span>
-          <time title="Created: 2018-12-01 10:01:55" itemprop="dateCreated datePublished" datetime="2018-12-01T10:01:55Z">2019-04-23</time>
+          <time title="Created: 2019-04-23" itemprop="dateCreated datePublished" datetime="2019-04-23">2019-04-23</time>
           <span class="post-meta-divider">|</span>
           <span class="post-meta-item-icon">
             <i class="fa fa-calendar-check-o"></i>
           </span>
           <span class="post-meta-item-text">更新:</span>
-          <time title="Modified: 2019-04-17 04:06:47" itemprop="dateModified" datetime="2019-04-17T04:06:47Z">2019-04-23</time>
+          <time title="Modified:2019-04-23" itemprop="dateModified" datetime="2019-04-23">2019-04-23</time>
         </span>
         <!-- <span class="post-comments-count">
           <span class="post-meta-divider">|</span>
@@ -215,7 +243,49 @@
       </div>
     </header>
     <div class="post-body">
-      
+      <div class="markdown-body">
+        
+      </div>
+    </div>
+  </div>
+</article>
+            
+              <article class="post post-type-normal">
+  <div class="post-block">
+    <header class="post-header">
+      <h2 class="post-title" itemprop="name headline">
+        <a href='#/archive/Wes-Anderson-pop-up-Bushwick-artisan' class="post-title-link" itemprop="url">Wes Anderson pop-up Bushwick artisan</a>
+      </h2>
+      <div class="post-meta">
+        <span class="post-time">
+          <span class="post-meta-item-icon">
+            <i class="fa fa-calendar-o"></i>
+          </span>
+          <span class="post-meta-item-text">发布:</span>
+          <time title="Created: 2019-04-23" itemprop="dateCreated datePublished" datetime="2019-04-23">2019-04-23</time>
+          <span class="post-meta-divider">|</span>
+          <span class="post-meta-item-icon">
+            <i class="fa fa-calendar-check-o"></i>
+          </span>
+          <span class="post-meta-item-text">更新:</span>
+          <time title="Modified:2019-04-23" itemprop="dateModified" datetime="2019-04-23">2019-04-23</time>
+        </span>
+        <!-- <span class="post-comments-count">
+          <span class="post-meta-divider">|</span>
+          <span class="post-meta-item-icon">
+            <i class="fa fa-comment-o"></i>
+          </span>
+          <span class="post-meta-item-text">Comments: </span>
+          <a href="/next-6-6-0-released/#comments" itemprop="discussionUrl">
+            <span class="post-comments-count disqus-comment-count" data-disqus-identifier="next-6-6-0-released/" itemprop="commentCount">0</span>
+          </a>
+        </span> -->
+      </div>
+    </header>
+    <div class="post-body">
+      <div class="markdown-body">
+        
+      </div>
     </div>
   </div>
 </article>
@@ -230,7 +300,7 @@
       <div class="site-overview">
         <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="">
           <img class="site-author-image" itemprop="image" src="./asserts/icon-128x128.png" alt="Robin">
-          <p class="site-author-name" itemprop="name">Robinssss</p>
+          <p class="site-author-name" itemprop="name">Robin</p>
           <div class="site-description motion-element" itemprop="description">learn</div>
         </div>
       </div>

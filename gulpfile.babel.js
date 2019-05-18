@@ -14,7 +14,7 @@ var reload = browserSync.reload;
 var { parallel, series } = gulp;
 
 // console.log("argv: ", process.argv);
-const isDev = process.argv.include('--dev'); // 开发模式
+const isDev = process.argv.includes('--dev'); // 开发模式
 var config = {
   output: isDev ? './dist' : "./docs",
   copyFiles: [
@@ -80,7 +80,29 @@ function makeIndex(content) {
       .pipe(resolve());
   })
 }
+// 文章列表
+function makeArchivesCatalog(content) {
+  return new Promise((resolve, reject) => {
+    // var sorted = content
+    //   .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+      content.forEach(
+        item => (item.updatedAt = item.updatedAt.split("T")[0])
+      );
+    ejsCompiler.renderFile(
+      "./src/views/archives_catalog.ejs",
+      { sorted: sorted },
+      (err, str) => {
+        // console.log("archives", str, sorted);
 
+        fs.writeFile(`${config.output}/archives.html`, str, err => {
+          if (err) throw err;
+          console.log("文章列表 文件已被保存");
+          resolve();
+        });
+      }
+    );
+  });
+}
 function makeArchives(item) {
   return new Promise((resolve, reject) => {
     item.createAt = new Date(item.createAt).toISOString().split("T")[0];
@@ -100,18 +122,38 @@ function makeArchives(item) {
 }
 
 function compileEjs(done) {
+  const outputArchives = config.output + "/archives";
+  fs.exists(outputArchives, exists => {
+    console.log(outputArchives, exists);
+    if (!exists) { // 不存在
+      fs.mkdir(outputArchives, (err, res) => {
+        console.log(outputArchives, '已经创建');
+      });
+    }
+  });
   postPick().then((content) => {
-    Promise.all(content.map(makeArchives).concat(makeIndex(content)))
-           .then((res) => done())
-           .catch((err) => {
-             console.log("compileEjs err", err);
-           })
+    var sorted = content.sort(
+      (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+    );
+    Promise.all([
+      ...sorted.map(makeArchives),
+      makeIndex(sorted),
+      makeArchivesCatalog(sorted)
+    ])
+      .then(res => done())
+      .catch(err => {
+        console.log("compileEjs err", err);
+      });
   });
 }
 
 function compileLess() {
   return gulp
-    .src("./src/styles/index.less")
+    .src([
+      "./src/styles/index.less",
+      "./src/styles/iconfont.less",
+      "./src/styles/markdown-body.less"
+    ])
     .pipe(
       less({
         paths: [path.join(__dirname, "less", "includes")]

@@ -37,23 +37,30 @@
     );
   })();
   // 文章查看
-  window.addEventListener("hashchange", function() {
+  window.addEventListener("hashchange", loadHtmlContent);
+  window.addEventListener("load", loadHtmlContent);
+
+  function loadHtmlContent() {
     var archive = window.location.hash.split("#/archive")[1];
-    if (archive) {
-      fetch(`./archives/${archive}.html`)
-        .then(function(response) {
-          let contentType = response.headers.get("content-type");
-          console.log(response, contentType);
-          if (contentType.includes("text/html")) {
-            return response.text();
-          }
-          // return response.json();
-        })
-        .then(function(myJson) {
-          document.getElementById("posts").innerHTML = myJson;
-        });
+    var api = '';
+    if (archive) { // /^\w+/.test(archive)
+      api = `./archives/${archive}.html`;
+    } else {
+      api = './archives.html';
     }
-  });
+    fetch(api)
+      .then(function(response) {
+        let contentType = response.headers.get("content-type");
+        console.log(response, contentType);
+        if (contentType.includes("text/html")) {
+          return response.text();
+        }
+        // return response.json();
+      })
+      .then(function(myJson) {
+        document.getElementById("posts").innerHTML = myJson;
+      });
+  }
   // 滚动时侧边栏位置
   window.addEventListener("scroll", function() {
     debonuce(handleScroll)();

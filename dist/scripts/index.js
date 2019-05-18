@@ -55,23 +55,33 @@
     }(); // 文章查看
 
 
-    window.addEventListener("hashchange", function () {
+    window.addEventListener("hashchange", loadHtmlContent);
+    window.addEventListener("load", loadHtmlContent);
+
+    function loadHtmlContent() {
       var archive = window.location.hash.split("#/archive")[1];
+      var api = '';
 
       if (archive) {
-        fetch("./archives/".concat(archive, ".html")).then(function (response) {
-          var contentType = response.headers.get("content-type");
-          console.log(response, contentType);
-
-          if (contentType.includes("text/html")) {
-            return response.text();
-          } // return response.json();
-
-        }).then(function (myJson) {
-          document.getElementById("posts").innerHTML = myJson;
-        });
+        // /^\w+/.test(archive)
+        api = "./archives/".concat(archive, ".html");
+      } else {
+        api = './archives.html';
       }
-    }); // 滚动时侧边栏位置
+
+      fetch(api).then(function (response) {
+        var contentType = response.headers.get("content-type");
+        console.log(response, contentType);
+
+        if (contentType.includes("text/html")) {
+          return response.text();
+        } // return response.json();
+
+      }).then(function (myJson) {
+        document.getElementById("posts").innerHTML = myJson;
+      });
+    } // 滚动时侧边栏位置
+
 
     window.addEventListener("scroll", function () {
       debonuce(handleScroll)();
@@ -165,7 +175,7 @@
     }); // TODO add service worker code here
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./../service-worker.js').then(function () {
+      navigator.serviceWorker.register('service-worker.js').then(function () {
         console.log('Service Worker Registered');
       });
     }
