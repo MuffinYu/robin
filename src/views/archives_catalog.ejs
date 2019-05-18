@@ -1,0 +1,12 @@
+<div class='archive-list-wrap'>
+  <div class='archive-list-content'>
+    <% sorted.forEach(function(item){ %>
+    <div class='archive-list-item'>
+      <div class="archive-meta"><%=item.updatedAt %></div>
+      <h3 class="archive-title">
+        <a href='#/archive/<%- item.href %>' class="archive-href" itemprop="url"><%=item.title %></a>
+      </h3>
+    </div>
+    <% }); %>
+  </div>
+</div>
