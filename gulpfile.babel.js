@@ -90,7 +90,7 @@ function makeArchivesCatalog(content) {
       );
     ejsCompiler.renderFile(
       "./src/views/archives_catalog.ejs",
-      { sorted: sorted },
+      { sorted: content },
       (err, str) => {
         // console.log("archives", str, sorted);
 
