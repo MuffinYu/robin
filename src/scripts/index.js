@@ -82,7 +82,7 @@
     var mainHeight = document.getElementById("container").clientHeight;
     app.mainHeight =
       mainHeight > contentHeight ? mainHeight : contentHeight;
-      console.log("app.mainHeight", app.mainHeight);
+      // console.log("app.mainHeight", app.mainHeight);s
     return app.mainHeight;
   }
   // 滚动

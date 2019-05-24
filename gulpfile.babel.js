@@ -184,7 +184,7 @@ marked.setOptions({
   smartypants: true,
   xhtml: true,
   highlight: code => {
-    console.log('code', code);
+    // console.log('code', code);
     return Prism.highlight(code, Prism.languages.javascript, "javascript");
   }
 });
