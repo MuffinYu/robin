@@ -59,17 +59,22 @@
     window.addEventListener("load", loadHtmlContent);
 
     function loadHtmlContent() {
-      var archive = window.location.hash.split("#/archive")[1];
+      var hash = window.location.hash;
+      console.log("window.location.hash", window.location.hash);
       var api = '';
 
-      if (archive) {
-        // /^\w+/.test(archive)
-        api = "./archives/".concat(archive, ".html");
-      } else {
-        api = './archives.html';
+      if (/archive/.test(hash)) {
+        var archive = window.location.hash.split("#/archive")[1];
+
+        if (archive) {
+          // /^\w+/.test(archive)
+          api = "./archives/".concat(archive, ".html");
+        } else {
+          api = "./archives.html";
+        }
       }
 
-      fetch(api).then(function (response) {
+      api && fetch(api).then(function (response) {
         var contentType = response.headers.get("content-type");
         console.log(response, contentType);
 

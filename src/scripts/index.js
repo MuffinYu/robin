@@ -41,14 +41,19 @@
   window.addEventListener("load", loadHtmlContent);
 
   function loadHtmlContent() {
-    var archive = window.location.hash.split("#/archive")[1];
+    var hash = window.location.hash;
+    console.log("window.location.hash", window.location.hash);
     var api = '';
-    if (archive) { // /^\w+/.test(archive)
-      api = `./archives/${archive}.html`;
-    } else {
-      api = './archives.html';
+    if (/archive/.test(hash)) {
+      var archive = window.location.hash.split("#/archive")[1];
+      if (archive) {
+        // /^\w+/.test(archive)
+        api = `./archives/${archive}.html`;
+      } else {
+        api = "./archives.html";
+      }
     }
-    fetch(api)
+    api && fetch(api)
       .then(function(response) {
         let contentType = response.headers.get("content-type");
         console.log(response, contentType);

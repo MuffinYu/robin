@@ -8,6 +8,9 @@ var babel = require('gulp-babel');
 const markdownToJSON = require('gulp-markdown-to-json');
 const marked = require('marked');
 const fs = require('fs');
+var del = require("del");
+var Prism = require("prismjs");
+
 var through = require('through2');
 
 var reload = browserSync.reload;  
@@ -175,8 +178,15 @@ function compileLess() {
 // }
 
 marked.setOptions({
-  pedantic: true,
-  smartypants: true
+  breaks: true,
+  tables: true,
+  gfm: true,
+  smartypants: true,
+  xhtml: true,
+  highlight: code => {
+    console.log('code', code);
+    return Prism.highlight(code, Prism.languages.javascript, "javascript");
+  }
 });
 
 function compileMarkdown() {
@@ -232,6 +242,14 @@ function copyPWA() {
     .pipe(reload({ stream: true }));
 }
 
+gulp.task("clean", function(cb) {
+  del.sync(
+    [
+      `${config.output}/*`
+    ]
+  );
+  cb();
+});
 gulp.task('js', compileJs);
 gulp.task('ejs', compileEjs);
 gulp.task('less', compileLess);
@@ -265,7 +283,10 @@ gulp.task('server', function() {
           gulp.series("ejs")
         );
         gulp.watch(["./src/styles/*.less"], gulp.series("less"));
-        gulp.watch(["./src/posts/*.md"], gulp.series("markdown"));
+        gulp.watch(
+          ["./src/posts/*.md"],
+          gulp.series("markdown", "ejs")
+        );
         gulp.watch(config.copyFiles, gulp.series("copy"));
         // var ejsWatcher = gulp.watch(["./*.ejs", "./views/*.ejs"], function(event) {
         //   console.log('ejs: File ' + event.path + ' was ' + event.type + ', running tasks...');
@@ -285,4 +306,10 @@ gulp.task('server', function() {
   });
 })
 
-gulp.task('default', gulp.parallel([ gulp.series('markdown', 'ejs'), 'less', 'js', 'copy', 'server']));
+gulp.task(
+  "default",
+  series(
+    "clean",
+    parallel([series("markdown", "ejs"), "less", "js", "copy", "server"])
+  )
+);
