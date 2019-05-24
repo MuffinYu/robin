@@ -1,0 +1,124 @@
+<article class="post post-type-normal">
+  <div class="post-block">
+    <header class="post-header">
+      <h2 class="post-title" itemprop="name headline">
+        <a href='#/archive/从一个需求开始学babel插件开发' class="post-title-link" itemprop="url">从一个需求开始学babel插件开发</a>
+      </h2>
+      <div class="post-meta">
+        <span class="post-time">
+          <span class="post-meta-item-icon">
+            <i class="fa fa-calendar-o"></i>
+          </span>
+          <span class="post-meta-item-text">发布:</span>
+          <time title="Created: 2019-05-23" itemprop="dateCreated datePublished" datetime="2019-05-23">2019-05-23</time>
+          <span class="post-meta-divider">|</span>
+          <span class="post-meta-item-icon">
+            <i class="fa fa-calendar-check-o"></i>
+          </span>
+          <span class="post-meta-item-text">更新:</span>
+          <time title="Modified:2019-05-24" itemprop="dateModified" datetime="2019-05-24">2019-05-24</time>
+        </span>
+        <!-- <span class="post-comments-count">
+          <span class="post-meta-divider">|</span>
+          <span class="post-meta-item-icon">
+            <i class="fa fa-comment-o"></i>
+          </span>
+          <span class="post-meta-item-text">Comments: </span>
+          <a href="/next-6-6-0-released/#comments" itemprop="discussionUrl">
+            <span class="post-comments-count disqus-comment-count" data-disqus-identifier="next-6-6-0-released/" itemprop="commentCount">0</span>
+          </a>
+        </span> -->
+      </div>
+    </header>
+    <div class="post-body">
+      <div class="markdown-body">
+        <h3 id="前言">前言</h3>
+<p>基于现在JS这门语言快速发展的现状，很多还处于<a href="https://github.com/tc39/proposals">TC39 提案</a>的新语法，或者已经写入新的语言规则的语法提案但在浏览器的支持度上不是十分普及， 以及JS的运行环境，也就是用户的浏览器碎片化的分布，无法保证我们在开发过程中写的JS代码在客户端一致正常的运行，这种情况肯定是不能接受的。</p>
+<p>而这正是Babel存在的价值，Babel可以把新的语法编译成能在不同浏览器中运行一致的兼容语法。开发者可以尽情的享受新的语法在开发中带来的爽快，如使用React的jsx语法，ES6的模块方案，class，箭头函数等，而在生产环境中只需要按照需求，配置好Babel的presets和plugins等配置，把项目代码编译成生产代码就可以了。</p>
+<p>因此了解一些Babel插件的编写方法绝对是有必要的。</p>
+<h3 id="需求">需求</h3>
+<p>通常，我们使用Babel是在node的环境下，在项目代码运行前就按照一定的配置将代码编译打包好，但这次需要在客户端实时的将用户输入的代码编译成可运行的代码，而其中有一类代码是模块引入的代<br/>码，代码编译成浏览器端的属性读取代码， 例如:</p>
+<pre><code class="language-javascript">  <span class="token keyword">import</span> <span class="token punctuation">{</span> prop <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'modules'</span><span class="token punctuation">;</span></code></pre>
+<p>编译成 </p>
+<pre><code class="language-javascript">  <span class="token keyword">var</span> <span class="token punctuation">{</span> prop <span class="token punctuation">}</span> <span class="token operator">=</span> window<span class="token punctuation">[</span><span class="token string">'modules'</span><span class="token punctuation">]</span><span class="token punctuation">;</span></code></pre>
+<p>因此就需要用一个插件来执行这种编译操作；</p>
+<h3 id="实现方式">实现方式</h3>
+<ol>
+<li>通过Google的 (CDN)[<a href="https://unpkg.com/%5D">https://unpkg.com/]</a> ，在页面的script标签中加载Babel包，如下 ：</li>
+</ol>
+<pre><code class="language-js">  <span class="token operator">&lt;</span>script src<span class="token operator">=</span><span class="token string">"https://unpkg.com/@babel/standalone/babel.min.js"</span><span class="token operator">></span><span class="token operator">&lt;</span><span class="token operator">/</span>script<span class="token operator">></span></code></pre>
+<p>  这样在浏览器的window全局对象里，就会注册一个Babel对象，在这个对象中，有包含transform（编译）、registerPlugin（注册插件）、registerPreset（注册preset）等方法，而在这个需求中，所需要的就是 transform 和 registerPlugin 两个方法了。</p>
+<ol start="2">
+<li>接下来就是在Babel里面注册一个插件，主要功能是在 Visitors（访问者）“进入”一个节点时，如果是”ImportDeclaration”节点，即引入包的语法，将会进行处理，将该语句替换成属性读取的方式。代码如下：</li>
+</ol>
+<pre><code class="language-js">Babel<span class="token punctuation">.</span><span class="token function">registerPlugin</span><span class="token punctuation">(</span><span class="token string">"babel-module"</span><span class="token punctuation">,</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">babel</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">var</span> t <span class="token operator">=</span> babel<span class="token punctuation">.</span>types<span class="token punctuation">;</span> <span class="token comment">// AST模块</span>
+  <span class="token keyword">return</span> <span class="token punctuation">{</span>
+    visitor<span class="token punctuation">:</span> <span class="token punctuation">{</span>
+      <span class="token function">ImportDeclaration</span><span class="token punctuation">(</span><span class="token parameter">path</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">const</span> <span class="token punctuation">{</span> node <span class="token punctuation">}</span> <span class="token operator">=</span> path<span class="token punctuation">;</span>
+        <span class="token keyword">const</span> <span class="token punctuation">{</span>
+          objectPattern<span class="token punctuation">,</span>
+          objectProperty<span class="token punctuation">,</span>
+          variableDeclaration<span class="token punctuation">,</span>
+          variableDeclarator
+        <span class="token punctuation">}</span> <span class="token operator">=</span> t<span class="token punctuation">;</span>
+        <span class="token keyword">var</span> specifiers <span class="token operator">=</span> node<span class="token punctuation">.</span>specifiers<span class="token punctuation">.</span><span class="token function">filter</span><span class="token punctuation">(</span>
+          <span class="token parameter">specifier</span> <span class="token operator">=></span> specifier<span class="token punctuation">.</span>type <span class="token operator">===</span> <span class="token string">"ImportSpecifier"</span>
+        <span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">var</span> memberExp <span class="token operator">=</span> t<span class="token punctuation">.</span><span class="token function">memberExpression</span><span class="token punctuation">(</span>
+          t<span class="token punctuation">.</span><span class="token function">identifier</span><span class="token punctuation">(</span><span class="token string">"window"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+          node<span class="token punctuation">.</span>source<span class="token punctuation">,</span>
+          <span class="token boolean">true</span>
+        <span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 成员表达式</span>
+        <span class="token keyword">var</span> varDeclare <span class="token operator">=</span> <span class="token function">variableDeclaration</span><span class="token punctuation">(</span><span class="token string">"var"</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>
+          <span class="token function">variableDeclarator</span><span class="token punctuation">(</span>
+            <span class="token function">objectPattern</span><span class="token punctuation">(</span>
+              specifiers<span class="token punctuation">.</span><span class="token function">map</span><span class="token punctuation">(</span><span class="token parameter">specifier</span> <span class="token operator">=></span>
+                <span class="token function">objectProperty</span><span class="token punctuation">(</span>
+                  specifier<span class="token punctuation">.</span>local<span class="token punctuation">,</span>
+                  specifier<span class="token punctuation">.</span>local<span class="token punctuation">,</span>
+                  <span class="token boolean">false</span><span class="token punctuation">,</span>
+                  <span class="token boolean">true</span>
+                <span class="token punctuation">)</span>
+              <span class="token punctuation">)</span>
+            <span class="token punctuation">)</span><span class="token punctuation">,</span>
+            memberExp
+          <span class="token punctuation">)</span>
+        <span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        path<span class="token punctuation">.</span><span class="token function">replaceWith</span><span class="token punctuation">(</span>varDeclare<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<ol start="3">
+<li>注册完插件后，就可以利于用Babel里的transform方法和刚才的插件，来进行编译了，除了注册的插件以外，还可以利用babel内置的其他插件和preset，如下：</li>
+</ol>
+<pre><code class="language-js">window<span class="token punctuation">.</span>Babel<span class="token punctuation">.</span><span class="token function">transform</span><span class="token punctuation">(</span>sourceCode<span class="token punctuation">,</span> <span class="token punctuation">{</span>
+        presets<span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">'react'</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+        plugins<span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">'babel-module'</span><span class="token punctuation">,</span> <span class="token string">'proposal-class-properties'</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+        ast<span class="token punctuation">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+      <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>code</code></pre>
+<blockquote>
+<p>注意：plugins和presets的执行顺序<br></p>
+<ul>
+<li>plugin在preset前执行</li>
+<li>plugin是从前到后依次执行，即写在前面的先执行</li>
+<li>preset是从后到前依次执行，即写在后面的先执行</li>
+</ul>
+</blockquote>
+<ol start="4">
+<li>这样就完成了一个在客户端注册babel插件的过程，在项目中使用自定义的Babel插件方式大同小异，在配置中加上presets和plugins的参数就可以了，参数可以是npm包的名字，也可以是本地文件的相对或者绝对路径，具体参考Babel文档中的 <a href="https://babel.docschina.org/docs/en/plugins#plugin-preset-paths"><strong>pulgins/presets Path</strong></a></li>
+</ol>
+<h3 id="参考资料">参考资料</h3>
+<ul>
+<li><p>babel插件开发手册 <a href="https://github.com/jamiebuilds/babel-handbook/blob/master/translations/zh-Hans/plugin-handbook.md#builders">中文版</a> <a href="https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md">英文版</a></p>
+</li>
+<li><p>查看AST和节点对应关系 <a href="https://astexplorer.net/">在线结果网站</a></p>
+</li>
+</ul>
+
+      </div>
+    </div>
+  </div>
+</article>

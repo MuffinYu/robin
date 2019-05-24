@@ -342,8 +342,8 @@
 .markdown-body pre {
   background-color: #f6f8fa;
   border-radius: 3px;
-  font-size: 85%;
-  line-height: 1.45;
+  font-size: 100%;
+  line-height: 1.8;
   overflow: auto;
   padding: 16px;
 }
@@ -389,4 +389,96 @@
 }
 .markdown-body a:hover {
   text-decoration: underline;
+}
+/**
+====================  prismjs hightlihgt   =============================
+*/
+.language-javascript,
+.language-js {
+  color: #24292e;
+}
+.language-javascript .prolog,
+.language-js .prolog,
+.language-javascript .doctype,
+.language-js .doctype,
+.language-javascript .cdata,
+.language-js .cdata,
+.language-javascript .comment,
+.language-js .comment {
+  color: hsl(30, 20%, 50%);
+}
+.language-javascript .property,
+.language-js .property,
+.language-javascript .tag,
+.language-js .tag,
+.language-javascript .boolean,
+.language-js .boolean,
+.language-javascript .number,
+.language-js .number,
+.language-javascript .constant,
+.language-js .constant,
+.language-javascript .symbol,
+.language-js .symbol {
+  color: #fc929e;
+}
+.language-javascript .attr-name,
+.language-js .attr-name,
+.language-javascript .char,
+.language-js .char,
+.language-javascript .builtin,
+.language-js .builtin,
+.language-javascript .insterted,
+.language-js .insterted {
+  color: hsl(75, 70%, 60%);
+}
+.language-javascript .operator,
+.language-js .operator,
+.language-javascript .entity,
+.language-js .entity,
+.language-javascript .url,
+.language-js .url,
+.language-javascript .variable,
+.language-js .variable,
+.language-javascript .language-css,
+.language-js .language-css {
+  color: hsl(40, 90%, 60%);
+}
+.language-javascript .deleted,
+.language-js .deleted {
+  color: #ff5555;
+}
+.language-javascript .regex,
+.language-js .regex,
+.language-javascript .important,
+.language-js .important {
+  color: #e90;
+}
+.language-javascript .atrule,
+.language-js .atrule,
+.language-javascript .attr-value,
+.language-js .attr-value,
+.language-javascript .keyword,
+.language-js .keyword {
+  color: #d73a49;
+}
+.language-javascript .punctuation,
+.language-js .punctuation {
+  color: #24292e;
+}
+.language-javascript .symbol,
+.language-js .symbol {
+  opacity: 0.7;
+  color: #88c6be;
+}
+.language-javascript .function,
+.language-js .function {
+  color: #6f42c1;
+}
+.language-javascript .class-name,
+.language-js .class-name {
+  color: #fac863;
+}
+.language-javascript .string,
+.language-js .string {
+  color: #032f62;
 }

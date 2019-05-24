@@ -44,14 +44,14 @@
 <p><strong>粗体文本</strong></p>
 <p><strong><em>粗斜体文本</em></strong></p>
 <p><strong><em>粗斜体文本</em></strong></p>
-<hr>
-<hr>
-<hr>
-<hr>
-<hr>
+<hr/>
+<hr/>
+<hr/>
+<hr/>
+<hr/>
 <p>RUNOOB.COM</p>
 <p>GOOGLE.COM</p>
-<p>~~BAIDU.COM~~</p>
+<p><del>BAIDU.COM</del></p>
 <p>创建脚注格式类似这样 [^RUNOOB]。</p>
 <p>[^RUNOOB]: 菜鸟教程 – 学的不仅是技术，更是梦想！！！</p>
 <ul>
@@ -86,9 +86,7 @@
 </li>
 </ol>
 <blockquote>
-<p>区块引用
-菜鸟教程
-学的不仅是技术更是梦想</p>
+<p>区块引用<br/>菜鸟教程<br/>学的不仅是技术更是梦想</p>
 </blockquote>
 <blockquote>
 <p>最外层</p>
@@ -100,44 +98,72 @@
 </blockquote>
 </blockquote>
 <blockquote>
-<p>区块中使用列表
-1. 第一项
-2. 第二项
-+ 第一项
-+ 第二项
-+ 第三项</p>
+<p>区块中使用列表</p>
+<ol>
+<li>第一项</li>
+<li>第二项</li>
+</ol>
+<ul>
+<li>第一项</li>
+<li>第二项</li>
+<li>第三项</li>
+</ul>
 </blockquote>
 <ul>
 <li>第一项<blockquote>
-<p>菜鸟教程
-学的不仅是技术更是梦想</p>
+<p>菜鸟教程<br/>学的不仅是技术更是梦想</p>
 </blockquote>
 </li>
 <li>第二项</li>
 </ul>
 <p><code>printf()</code> 函数</p>
-<p><code>javascript
-$(document).ready(function () {
-    alert(&#39;RUNOOB&#39;);
-});</code></p>
+<pre><code class="language-javascript"><span class="token function">$</span><span class="token punctuation">(</span>document<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">ready</span><span class="token punctuation">(</span><span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token function">alert</span><span class="token punctuation">(</span><span class="token string">'RUNOOB'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
 <p>这是一个链接 <a href="https://www.runoob.com">菜鸟教程</a></p>
-<p><img src="http://static.runoob.com/images/runoob-logo.png" alt="RUNOOB 图标"></p>
-<p><img src="http://static.runoob.com/images/runoob-logo.png" alt="RUNOOB 图标" title="RUNOOB"></p>
+<p><img src="http://static.runoob.com/images/runoob-logo.png" alt="RUNOOB 图标"/></p>
+<p><img src="http://static.runoob.com/images/runoob-logo.png" alt="RUNOOB 图标" title="RUNOOB"/></p>
 <p>这个链接用 1 作为网址变量 <a href="http://static.runoob.com/images/runoob-logo.png">RUNOOB</a>.
 然后在文档的结尾位变量赋值（网址）</p>
-<p><img src="http://static.runoob.com/images/runoob-logo.png" width="50%"></p>
-<p>|  de   | aaa  |
-|  —  | —  |
-| as  | xc |
-| xcx  | cvv |</p>
-<p>  | column1 | column2 |
-  |———|———|
-  | value1  | value2  |
-  | value3  | value4  |</p>
+<img src="http://static.runoob.com/images/runoob-logo.png" width="50%">
+
+<table>
+<thead>
+<tr>
+<th>de</th>
+<th>aaa</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>as</td>
+<td>xc</td>
+</tr>
+<tr>
+<td>xcx</td>
+<td>cvv</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>column1</th>
+<th>column2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>value1</td>
+<td>value2</td>
+</tr>
+<tr>
+<td>value3</td>
+<td>value4</td>
+</tr>
+</tbody></table>
 <!-- | 左对齐 | 右对齐 | 居中对齐 |
 | :-----| ----: | :----: |
 | 单元格 | 单元格 | 单元格 |
 | 单元格 | 单元格 | 单元格 | -->
+
 <p>使用 <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Del</kbd> 重启电脑</p>
 <p><strong>文本加粗</strong> </p>
 <p>** 正常显示星号 **</p>
