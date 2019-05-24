@@ -39,15 +39,15 @@ ___粗斜体文本___
 
 ----------
 
-RUNOOB.COM
+https://muffinyu.github.io/robin/
 
-GOOGLE.COM
+https://muffinyu.github.io/robin/
 
-~~BAIDU.COM~~
+~~https://muffinyu.github.io/robin/~~
 
-创建脚注格式类似这样 [^RUNOOB]。
+创建脚注格式类似这样 [^RobinBolg]。
 
-[^RUNOOB]: 菜鸟教程 -- 学的不仅是技术，更是梦想！！！
+[^RobinBolg]: RobinBolg -- 学的不仅是技术，更是梦想！！！
 
 * 第一项
 * 第二项
@@ -70,7 +70,7 @@ GOOGLE.COM
     - 第二项嵌套的第一个元素
 
 > 区块引用
-> 菜鸟教程
+> Robin Blog
 > 学的不仅是技术更是梦想
 
 > 最外层
@@ -85,7 +85,7 @@ GOOGLE.COM
 > + 第三项
 
 * 第一项
-    > 菜鸟教程
+    > Robin Blog
     > 学的不仅是技术更是梦想
 * 第二项
 
@@ -93,22 +93,22 @@ GOOGLE.COM
 
 ```javascript
 $(document).ready(function () {
-    alert('RUNOOB');
+    alert('Robin');
 });
 ```
 
-这是一个链接 [菜鸟教程](https://www.runoob.com)
+这是一个链接 [Robin Blog](https://muffinyu.github.io/robin/)
 
-![RUNOOB 图标](http://static.runoob.com/images/runoob-logo.png)
+![Robin Blog](https://muffinyu.github.io/robin/asserts/icon-256x256.png)
 
-![RUNOOB 图标](http://static.runoob.com/images/runoob-logo.png "RUNOOB")
+![Robin Blog](https://muffinyu.github.io/robin/asserts/icon-256x256.png)
 
-这个链接用 1 作为网址变量 [RUNOOB][1].
+这个链接用 1 作为网址变量 [Robin][1].
 然后在文档的结尾位变量赋值（网址）
 
-[1]: http://static.runoob.com/images/runoob-logo.png
+[1]: https://muffinyu.github.io/robin/asserts/icon-256x256.png
 
-<img src="http://static.runoob.com/images/runoob-logo.png" width="50%">
+<img src="https://muffinyu.github.io/robin/asserts/icon-256x256.png" width="50%">
 
 |  de   | aaa  |
 |  ---  | ---  |
@@ -121,10 +121,6 @@ $(document).ready(function () {
   | value1  | value2  |
   | value3  | value4  |
 
-<!-- | 左对齐 | 右对齐 | 居中对齐 |
-| :-----| ----: | :----: |
-| 单元格 | 单元格 | 单元格 |
-| 单元格 | 单元格 | 单元格 | -->
 
 使用 <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Del</kbd> 重启电脑
 

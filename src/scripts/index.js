@@ -42,7 +42,7 @@
 
   function loadHtmlContent() {
     var hash = window.location.hash;
-    console.log("window.location.hash", window.location.hash);
+    // console.log("window.location.hash", window.location.hash);
     var api = '';
     if (/archive/.test(hash)) {
       var archive = window.location.hash.split("#/archive")[1];
@@ -53,31 +53,47 @@
         api = "./archives.html";
       }
     }
-    api && fetch(api)
+    if(api) {
+      fetch(api)
       .then(function(response) {
         let contentType = response.headers.get("content-type");
-        console.log(response, contentType);
         if (contentType.includes("text/html")) {
           return response.text();
         }
-        // return response.json();
       })
       .then(function(myJson) {
         document.getElementById("posts").innerHTML = myJson;
+        setTimeout(getPageHeight, 1000);
+      })
+      .catch(err => {
+        console.error(err);
       });
+    } else {
+      getPageHeight();
+    }
   }
   // 滚动时侧边栏位置
   window.addEventListener("scroll", function() {
-    debonuce(handleScroll)();
+    debonuce(handleScroll)(app.mainHeight);
   });
 
-  function handleScroll() {
-    if (!app.mainHeight) {
-      var contentHeight = document.getElementById("content").clientHeight;
-      var mainHeight = document.getElementById("main").clientHeight;
-      app.mainHeight = mainHeight > contentHeight ? mainHeight : contentHeight;
-    }
-    var mainHeight = app.mainHeight;
+  function getPageHeight() {
+    var contentHeight = document.getElementById("content").clientHeight;
+    var mainHeight = document.getElementById("container").clientHeight;
+    app.mainHeight =
+      mainHeight > contentHeight ? mainHeight : contentHeight;
+      console.log("app.mainHeight", app.mainHeight);
+    return app.mainHeight;
+  }
+  // 滚动
+  function handleScroll(mainHeight) {
+    // if (!app.mainHeight) {
+    //   var contentHeight = document.getElementById("content").clientHeight;
+    //   var mainHeight = document.getElementById("main").clientHeight;
+    //   app.mainHeight =
+    //     mainHeight > contentHeight ? mainHeight : contentHeight;
+    // }
+    // var mainHeight = app.mainHeight;
     // console.log('handle', Math.abs(document.body.getBoundingClientRect().top), mainHeight -document.body.clientHeight);
     var scrollPercent =
       app.scrollPercent || document.getElementById("scroll-percent");

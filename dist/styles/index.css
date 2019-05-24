@@ -1450,6 +1450,12 @@ td {
 .archive-href {
   border: none;
 }
+.footer {
+  text-align: center;
+  padding: 24px 0px 16px 0px;
+  font-size: 14px;
+  color: #999;
+}
 .headband {
   height: 3px;
   background: #222;
