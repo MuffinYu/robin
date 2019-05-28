@@ -82,8 +82,43 @@
             return response.text();
           }
         }).then(function (myJson) {
-          document.getElementById("posts").innerHTML = myJson;
-          setTimeout(getPageHeight, 1000);
+          document.getElementById("posts").innerHTML = myJson; // var scriptEle = document.createElement('script');
+          // scriptEle.type = 'text/javascript';
+          // scriptEle.innerHTML = `
+          //   var gitalk = new Gitalk({
+          //     clientID: '48c304a3b82423276209',
+          //     clientSecret: 'e09b744a31e79025c4dd1bc236c743eddc4ad55b',
+          //     repo: 'muffinyu.github.io',
+          //     owner: 'MuffinYu',
+          //     admin: [
+          //       'MuffinYu'
+          //     ],
+          //     id: ${archive},
+          //     // 请确保你的 location 连接小于 50 个字符，否则，插件会生成失败
+          //     distractionFreeMode: false
+          //     // 专注模式
+          //   })
+          //   gitalk.render('gitalk-container');
+          // `;
+          // documen.body.appendChild(scriptEle);
+
+          setTimeout(function () {
+            getPageHeight();
+            var gitalk = new Gitalk({
+              clientID: "48c304a3b82423276209",
+              clientSecret: "e09b744a31e79025c4dd1bc236c743eddc4ad55b",
+              // repo: "muffinyu.github.io",
+              // repo: "https://github.com/MuffinYu/MuffinYu",
+              repo: "robin",
+              owner: "MuffinYu",
+              admin: ["MuffinYu"],
+              id: archive,
+              // 请确保你的 location 连接小于 50 个字符，否则，插件会生成失败
+              distractionFreeMode: false // 专注模式
+
+            });
+            gitalk.render('gitalk-container');
+          }, 1000);
         }).catch(function (err) {
           console.error(err);
         });
@@ -100,7 +135,7 @@
     function getPageHeight() {
       var contentHeight = document.getElementById("content").clientHeight;
       var mainHeight = document.getElementById("container").clientHeight;
-      app.mainHeight = mainHeight > contentHeight ? mainHeight : contentHeight; // console.log("app.mainHeight", app.mainHeight);s
+      app.mainHeight = mainHeight > contentHeight ? mainHeight : contentHeight; // console.log("app.mainHeight", app.mainHeight);
 
       return app.mainHeight;
     } // 滚动
@@ -198,5 +233,7 @@
         console.log('Service Worker Registered');
       });
     }
-  })();
+  })(); // https://github.com/login/oauth/authorize?client_id=48c304a3b82423276209&redirect_uri=https://muffinyu.github.io/robin
+  // ?code=9d3e546776c654f277a9
+
 });
