@@ -68,7 +68,8 @@ function makeIndex(content) {
   }));
   return new Promise((resolve, reject) => {
     gulp
-      .src("./src/*.ejs")
+      // .src("./src/*.ejs")
+      .src("./src/index.ejs")
       .pipe(
         ejs(
           {

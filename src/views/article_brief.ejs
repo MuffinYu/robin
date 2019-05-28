@@ -37,3 +37,22 @@
     </div>
   </div>
 </article>
+<% if (body) { %>
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    var gitalk = new Gitalk({
+      clientID: '48c304a3b82423276209',
+      clientSecret: 'e09b744a31e79025c4dd1bc236c743eddc4ad55b',
+      repo: 'muffinyu.github.io',
+      owner: 'MuffinYu',
+      admin: [
+        'MuffinYu'
+      ],
+      id: '<%=title %>',
+      // 请确保你的 location 连接小于 50 个字符，否则，插件会生成失败
+      distractionFreeMode: false
+      // 专注模式
+    })
+    gitalk.render('gitalk-container');
+  </script>
+<% } %>
