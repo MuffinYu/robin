@@ -1,0 +1,349 @@
+<article class="post post-type-normal">
+  <div class="post-block">
+    <header class="post-header">
+      <h2 class="post-title" itemprop="name headline">
+        <a href='#/archive/GraphQL-Java上手[译]' class="post-title-link" itemprop="url">GraphQL Java上手[译]</a>
+      </h2>
+      <div class="post-meta">
+        <span class="post-time">
+          <span class="post-meta-item-icon">
+            <i class="fa fa-calendar-o"></i>
+          </span>
+          <span class="post-meta-item-text">发布:</span>
+          <time title="Created: 2019-06-14" itemprop="dateCreated datePublished" datetime="2019-06-14">2019-06-14</time>
+          <span class="post-meta-divider">|</span>
+          <span class="post-meta-item-icon">
+            <i class="fa fa-calendar-check-o"></i>
+          </span>
+          <span class="post-meta-item-text">更新:</span>
+          <time title="Modified:2019-06-24" itemprop="dateModified" datetime="2019-06-24">2019-06-24</time>
+        </span>
+        <!-- <span class="post-comments-count">
+          <span class="post-meta-divider">|</span>
+          <span class="post-meta-item-icon">
+            <i class="fa fa-comment-o"></i>
+          </span>
+          <span class="post-meta-item-text">Comments: </span>
+          <a href="/next-6-6-0-released/#comments" itemprop="discussionUrl">
+            <span class="post-comments-count disqus-comment-count" data-disqus-identifier="next-6-6-0-released/" itemprop="commentCount">0</span>
+          </a>
+        </span> -->
+      </div>
+    </header>
+    <div class="post-body">
+      <div class="markdown-body">
+        <!-- https://www.graphql-java.com/tutorials/getting-started-with-spring-boot/ -->
+
+<p>这篇引导文章适合想在java中使用GraphQL的开发者。在开始之前，你需要有一些Spring Boot和Java的知识，在文中也会有一些关于GraphQL的简单的介绍，但这篇文章的重点仍然是使用Java开发一个GraphQL服务。</p>
+<p>原文地址： <a href="https://www.graphql-java.com/tutorials/getting-started-with-spring-boot/">https://www.graphql-java.com/tutorials/getting-started-with-spring-boot/</a></p>
+<h3 id="3分钟了解graphql">3分钟了解GraphQL</h3>
+<p>GraphQL是一门从服务中查询数据的语言，在某些方面，他可以替代REST，SOAP或者gRPC。</p>
+<p>假设我们想从一个在线后端存储中取回一本书的详细信息，在GraphQL中，你可以发送一个书的id是’123’的查询条件到服务器：</p>
+<pre><code class="language-javascript"><span class="token punctuation">{</span>
+  <span class="token function">bookById</span><span class="token punctuation">(</span>id<span class="token punctuation">:</span> <span class="token string">"book-1"</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+    id
+    name
+    pageCount
+    author <span class="token punctuation">{</span>
+      firstName
+      lastName
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p>
+这不是JSON格式的数据（是故意设计成和JSON有点类型的格式），这是GraphQL查询。它大大致意思是：</p>
+<ul>
+<li><p>查询一本书通过一个具体的id</p>
+</li>
+<li><p>返回id, name, pageCount和author字段</p>
+</li>
+<li><p>author字段中，需要firstName和lastName字段</p>
+</li>
+</ul>
+<p>返回结果是普通的JSON结构：</p>
+<pre><code class="language-javascript"><span class="token punctuation">{</span> 
+  <span class="token string">"bookById"</span><span class="token punctuation">:</span>
+  <span class="token punctuation">{</span>
+    <span class="token string">"id"</span><span class="token punctuation">:</span><span class="token string">"book-1"</span><span class="token punctuation">,</span>
+    <span class="token string">"name"</span><span class="token punctuation">:</span><span class="token string">"Harry Potter and the Philosopher's Stone"</span><span class="token punctuation">,</span>
+    <span class="token string">"pageCount"</span><span class="token punctuation">:</span><span class="token number">223</span><span class="token punctuation">,</span>
+    <span class="token string">"author"</span><span class="token punctuation">:</span> <span class="token punctuation">{</span>
+      <span class="token string">"firstName"</span><span class="token punctuation">:</span><span class="token string">"Joanne"</span><span class="token punctuation">,</span>
+      <span class="token string">"lastName"</span><span class="token punctuation">:</span><span class="token string">"Rowling"</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p>GraphQL的一个非常重要的特性就是，它是静态类型的：服务准确的知道你能查询的每个对象，客户端<br/>其实是询问服务端，并且请求所谓的“schema”。schema描述所能进行的查询，和能够返回的字段。（注意：这里提到的schema,是指“GraphQL Schema”, 和其他类型的schema有点类似，比如 “JSON schema”和“Database Schema”）</p>
+<p>上述查询的schema结构如下所示：</p>
+<pre><code class="language-javascript">type Query <span class="token punctuation">{</span>
+  <span class="token function">bookById</span><span class="token punctuation">(</span>id<span class="token punctuation">:</span> <span class="token constant">ID</span><span class="token punctuation">)</span><span class="token punctuation">:</span> Book 
+<span class="token punctuation">}</span>
+
+type Book <span class="token punctuation">{</span>
+  id<span class="token punctuation">:</span> <span class="token constant">ID</span>
+  name<span class="token punctuation">:</span> String
+  pageCount<span class="token punctuation">:</span> Int
+  author<span class="token punctuation">:</span> Author
+<span class="token punctuation">}</span>
+
+type Author <span class="token punctuation">{</span>
+  id<span class="token punctuation">:</span> <span class="token constant">ID</span>
+  firstName<span class="token punctuation">:</span> String
+  lastName<span class="token punctuation">:</span> String
+<span class="token punctuation">}</span></code></pre>
+<p>本文会着重于阐述，究竟如何用Java实现这个schema的GraphQL服务。</p>
+<p>上面的例子仅对GraphQL的能力进行了初步的说明，可以在官网深入了解更多信息：<a href="https://graphql.github.io/learn/">https://graphql.github.io/learn/</a>。</p>
+<h3 id="graphql-java-概览">GraphQL Java 概览</h3>
+<p><a href="https://www.graphql-java.com/">GraphQL Java</a> 是使用Java server对GraphQL的实现。在GraphQL Java的Github账户中，有几个仓库，其中最重要的一个就是<a href="https://github.com/graphql-java/graphql-java">GraphQL Java Engine</a>，这是所有其他功能的基础。</p>
+<p>GraphQL Java Engine 本身仅关注查询条件的执行，不会处理和HTTP或者JSON相关的问题。因此，可以采用<a href="https://github.com/graphql-java/graphql-java-spring">GraphQL Java Spring Boot</a>项目，通过Spring Boot把API暴露到HTTP层面。</p>
+<p>创建一个GraphQL Java server的主要步骤：</p>
+<ul>
+<li><ol>
+<li>定义一个GraphQL Schema</li>
+</ol>
+</li>
+<li><ol start="2">
+<li>定义查询返回的具体的数据</li>
+</ol>
+</li>
+</ul>
+<p>示例API：获取一本书的详情</p>
+<p>这里的示例API就是一个简单的获取一本书的详细信息。这不算是一个全面的API，但对于这篇示例文章来说够用了。</p>
+<h3 id="创建一个spring-boot应用">创建一个Spring Boot应用</h3>
+<p>最简单的创建一个Spring Boot app的工具就是使用“Spring Initializr”网站的工具，在线生成：<a href="https://start.spring.io/"> https://start.spring.io/</a>。</p>
+<p>选择以下选项：</p>
+<ul>
+<li>Gradle Project</li>
+<li>Java</li>
+<li>Spring Boot 2.1.x</li>
+</ul>
+<p>使用以下项目元信息：</p>
+<ul>
+<li>Group: com.graphql-java.tutorial</li>
+<li>Artifact: book-details</li>
+</ul>
+<p>项目的依赖，选择<strong>Web</strong>。</p>
+<p>然后点击 <strong>Generate Project</strong>就会下载一个可以启动的Spring Boot app了。接下来提到的文件和路径，都会和这个项目相关联。</p>
+<p>我们需要添加三个新的依赖到我们项目的<strong>buidl.gradle</strong>:</p>
+<p>第一个是GraphQL Java，第二个是GraphQL Java Spring，第三个是<a href="https://github.com/google/guava">Google Guava</a>。Guava 不是必须的，但是可以使我们的开发简单点。</p>
+<p>添加后，项目依赖变成下面的样子：</p>
+<pre><code class="language-javascript">dependencies <span class="token punctuation">{</span>
+    implementation <span class="token string">'com.graphql-java:graphql-java:11.0'</span> <span class="token comment">// NEW</span>
+    implementation <span class="token string">'com.graphql-java:graphql-java-spring-boot-starter-webmvc:1.0'</span> <span class="token comment">// NEW</span>
+    implementation <span class="token string">'com.google.guava:guava:26.0-jre'</span> <span class="token comment">// NEW</span>
+    implementation <span class="token string">'org.springframework.boot:spring-boot-starter-web'</span>
+    testImplementation <span class="token string">'org.springframework.boot:spring-boot-starter-test'</span>
+<span class="token punctuation">}</span></code></pre>
+<h3 id="schema">Schema</h3>
+<p>在<strong>src/main/resources</strong>文件夹下添加一个文件<strong>schema.graphql</strong>，复制以下内容到文件中：</p>
+<pre><code class="language-javascript">type Query <span class="token punctuation">{</span>
+  <span class="token function">bookById</span><span class="token punctuation">(</span>id<span class="token punctuation">:</span> <span class="token constant">ID</span><span class="token punctuation">)</span><span class="token punctuation">:</span> Book 
+<span class="token punctuation">}</span>
+
+type Book <span class="token punctuation">{</span>
+  id<span class="token punctuation">:</span> <span class="token constant">ID</span>
+  name<span class="token punctuation">:</span> String
+  pageCount<span class="token punctuation">:</span> Int
+  author<span class="token punctuation">:</span> Author
+<span class="token punctuation">}</span>
+
+type Author <span class="token punctuation">{</span>
+  id<span class="token punctuation">:</span> <span class="token constant">ID</span>
+  firstName<span class="token punctuation">:</span> String
+  lastName<span class="token punctuation">:</span> String
+<span class="token punctuation">}</span></code></pre>
+<p>这个schema定义了一个顶级值域（在type <strong>Query</strong>中）：<strong>bookById</strong>会返回一本书的详情。</p>
+<p>同时，其中也定义了 type <strong>Book</strong> 有下列值域：<strong>id</strong>、<strong>name</strong>、<strong>pageCount</strong>和<strong>anthor</strong>。<strong>author</strong>也是一个 type <strong>Author</strong>，定义在<strong>Book</strong>后面。</p>
+<blockquote>
+<p>上面用于描述schema的语言称为 Schema Definition Language 或者 SDL。更多文档查看<a href="https://graphql.org/learn/schema/">这里</a>。</p>
+</blockquote>
+<p>现在有了这个文件，就需要通过读取这个文件来实现他，解析他，通过添加代码来加载数据。</p>
+<p>在package <strong>com.graphqljava.tutorial.bookdetails</strong> 中新建一个 <strong>GraphQLProvider</strong>class，在里面添加一个<strong>init</strong>方法，来创建 <strong>GraphQL</strong>实例：</p>
+<pre><code class="language-javascript">@Component
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">GraphQLProvider</span> <span class="token punctuation">{</span>
+
+    <span class="token keyword">private</span> GraphQL graphQL<span class="token punctuation">;</span>
+
+    @Bean
+    <span class="token keyword">public</span> GraphQL <span class="token function">graphQL</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> 
+        <span class="token keyword">return</span> graphQL<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    @PostConstruct
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span> throws IOException <span class="token punctuation">{</span>
+        <span class="token constant">URL</span> url <span class="token operator">=</span> Resources<span class="token punctuation">.</span><span class="token function">getResource</span><span class="token punctuation">(</span><span class="token string">"schema.graphqls"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        String sdl <span class="token operator">=</span> Resources<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span>url<span class="token punctuation">,</span> Charsets<span class="token punctuation">.</span><span class="token constant">UTF_8</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        GraphQLSchema graphQLSchema <span class="token operator">=</span> <span class="token function">buildSchema</span><span class="token punctuation">(</span>sdl<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>graphQL <span class="token operator">=</span> GraphQL<span class="token punctuation">.</span><span class="token function">newGraphQL</span><span class="token punctuation">(</span>graphQLSchema<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">private</span> GraphQLSchema <span class="token function">buildSchema</span><span class="token punctuation">(</span><span class="token parameter">String sdl</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token comment">// TODO: we will create the schema here later </span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p>使用Guava <strong>Resources</strong> 来读取这个文件，从类路径中，然后创建一个 <strong>GraphQLSchema</strong>和<strong>GraphQL</strong> 实例。这个 <strong>GraphQL</strong>实例通过<strong>@Bean</strong>注解 <strong>graphQL()</strong>方法暴露给Spring Bean。GraphQL Java Spring适配器会使用<strong>GraphQL</strong>实例将schema暴露给HTTP，默认路径是 <strong>/graphql</strong>。</p>
+<p>还需要做的是实现 <strong>buildSchema</strong>方法，来创建<strong>GraphQLSchema</strong>实例，链接代码查询数据：</p>
+<pre><code class="language-javascript">    @Autowired
+    GraphQLDataFetchers graphQLDataFetchers<span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> GraphQLSchema <span class="token function">buildSchema</span><span class="token punctuation">(</span><span class="token parameter">String sdl</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        TypeDefinitionRegistry typeRegistry <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SchemaParser</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">parse</span><span class="token punctuation">(</span>sdl<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        RuntimeWiring runtimeWiring <span class="token operator">=</span> <span class="token function">buildWiring</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        SchemaGenerator schemaGenerator <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SchemaGenerator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> schemaGenerator<span class="token punctuation">.</span><span class="token function">makeExecutableSchema</span><span class="token punctuation">(</span>typeRegistry<span class="token punctuation">,</span> runtimeWiring<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">private</span> RuntimeWiring <span class="token function">buildWiring</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> RuntimeWiring<span class="token punctuation">.</span><span class="token function">newRuntimeWiring</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token function">newTypeWiring</span><span class="token punctuation">(</span><span class="token string">"Query"</span><span class="token punctuation">)</span>
+                        <span class="token punctuation">.</span><span class="token function">dataFetcher</span><span class="token punctuation">(</span><span class="token string">"bookById"</span><span class="token punctuation">,</span> graphQLDataFetchers<span class="token punctuation">.</span><span class="token function">getBookByIdDataFetcher</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token function">newTypeWiring</span><span class="token punctuation">(</span><span class="token string">"Book"</span><span class="token punctuation">)</span>
+                        <span class="token punctuation">.</span><span class="token function">dataFetcher</span><span class="token punctuation">(</span><span class="token string">"author"</span><span class="token punctuation">,</span> graphQLDataFetchers<span class="token punctuation">.</span><span class="token function">getAuthorDataFetcher</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span></code></pre>
+<p><strong>TypeDefinitionRegistry</strong>是解析后的schema文件，<strong>SchemaGenerator</strong>将<strong>RuntimeWiring</strong>和<strong>RuntimeWiring</strong>结合，最终生成<strong>GraphQLSchema</strong>。</p>
+<p><strong>buildRuntimeWiring</strong>使用<strong>graphQLDataFetchers</strong>bean来注册两个<strong>DataFetcher</strong>：</p>
+<ul>
+<li>一个取回书信息通过一个ID</li>
+<li>一个用来查询书的作者信息</li>
+</ul>
+<p><strong>DataFetcher</strong>和如何实现<strong>GraphQLDataFetchers</strong> bean在下章讲解。</p>
+<p>最终这个过程创建一个 <strong>GraphQL</strong>和一个 <strong>GraphQLSchema</strong>实例，如下图：</p>
+<p><img src="./images/graphql-schema.png" alt="graphql"/></p>
+<h3 id="datafetchers">DataFetchers</h3>
+<p>GraphQL Java服务最重要的部分可能就是<strong>DataFetcher</strong>了：<strong>DataFetcher</strong>会在查询执行的时候，从一个field获取数据。</p>
+<p>GraphQL Java 执行一个查询的时候，会对其中的每一个field调用对应的<strong>DataFetcher</strong>。一个<strong>*DataFetcher</strong>就是一个Interface(Java 接口)，里面只有一个方法，对应的一个<strong>DataFetcherEnvironment</strong>类型的参数：</p>
+<pre><code class="language-javascript"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">DataFetcher</span><span class="token operator">&lt;</span><span class="token constant">T</span><span class="token operator">></span> <span class="token punctuation">{</span>
+    <span class="token constant">T</span> <span class="token keyword">get</span><span class="token punctuation">(</span>DataFetchingEnvironment dataFetchingEnvironment<span class="token punctuation">)</span> throws Exception<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+<p>注意：schema中的<strong>每一个</strong>field都有一个<strong>DataFetcher</strong>与之关。如果你没有指定field对应的任何<strong>DataFetcher</strong>，会使用默认的<strong>PropertyDataFetcher</strong>。更多的细节会在更多详情中加以讨论。</p>
+<p>现在创建一个class <strong>GraphQLDataFethcers</strong>，包含一个简单的书籍列表和作者列表。</p>
+<p>文件内容如下，其中的细节在下面会加以说明：</p>
+<pre><code class="language-javascript">@Component
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">GraphQLDataFetchers</span> <span class="token punctuation">{</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> List<span class="token operator">&lt;</span>Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> String<span class="token operator">>></span> books <span class="token operator">=</span> Arrays<span class="token punctuation">.</span><span class="token function">asList</span><span class="token punctuation">(</span>
+            ImmutableMap<span class="token punctuation">.</span><span class="token function">of</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">,</span> <span class="token string">"book-1"</span><span class="token punctuation">,</span>
+                    <span class="token string">"name"</span><span class="token punctuation">,</span> <span class="token string">"Harry Potter and the Philosopher's Stone"</span><span class="token punctuation">,</span>
+                    <span class="token string">"pageCount"</span><span class="token punctuation">,</span> <span class="token string">"223"</span><span class="token punctuation">,</span>
+                    <span class="token string">"authorId"</span><span class="token punctuation">,</span> <span class="token string">"author-1"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            ImmutableMap<span class="token punctuation">.</span><span class="token function">of</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">,</span> <span class="token string">"book-2"</span><span class="token punctuation">,</span>
+                    <span class="token string">"name"</span><span class="token punctuation">,</span> <span class="token string">"Moby Dick"</span><span class="token punctuation">,</span>
+                    <span class="token string">"pageCount"</span><span class="token punctuation">,</span> <span class="token string">"635"</span><span class="token punctuation">,</span>
+                    <span class="token string">"authorId"</span><span class="token punctuation">,</span> <span class="token string">"author-2"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            ImmutableMap<span class="token punctuation">.</span><span class="token function">of</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">,</span> <span class="token string">"book-3"</span><span class="token punctuation">,</span>
+                    <span class="token string">"name"</span><span class="token punctuation">,</span> <span class="token string">"Interview with the vampire"</span><span class="token punctuation">,</span>
+                    <span class="token string">"pageCount"</span><span class="token punctuation">,</span> <span class="token string">"371"</span><span class="token punctuation">,</span>
+                    <span class="token string">"authorId"</span><span class="token punctuation">,</span> <span class="token string">"author-3"</span><span class="token punctuation">)</span>
+    <span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> List<span class="token operator">&lt;</span>Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> String<span class="token operator">>></span> authors <span class="token operator">=</span> Arrays<span class="token punctuation">.</span><span class="token function">asList</span><span class="token punctuation">(</span>
+            ImmutableMap<span class="token punctuation">.</span><span class="token function">of</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">,</span> <span class="token string">"author-1"</span><span class="token punctuation">,</span>
+                    <span class="token string">"firstName"</span><span class="token punctuation">,</span> <span class="token string">"Joanne"</span><span class="token punctuation">,</span>
+                    <span class="token string">"lastName"</span><span class="token punctuation">,</span> <span class="token string">"Rowling"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            ImmutableMap<span class="token punctuation">.</span><span class="token function">of</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">,</span> <span class="token string">"author-2"</span><span class="token punctuation">,</span>
+                    <span class="token string">"firstName"</span><span class="token punctuation">,</span> <span class="token string">"Herman"</span><span class="token punctuation">,</span>
+                    <span class="token string">"lastName"</span><span class="token punctuation">,</span> <span class="token string">"Melville"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            ImmutableMap<span class="token punctuation">.</span><span class="token function">of</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">,</span> <span class="token string">"author-3"</span><span class="token punctuation">,</span>
+                    <span class="token string">"firstName"</span><span class="token punctuation">,</span> <span class="token string">"Anne"</span><span class="token punctuation">,</span>
+                    <span class="token string">"lastName"</span><span class="token punctuation">,</span> <span class="token string">"Rice"</span><span class="token punctuation">)</span>
+    <span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> DataFetcher <span class="token function">getBookByIdDataFetcher</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> dataFetchingEnvironment <span class="token operator">-</span><span class="token operator">></span> <span class="token punctuation">{</span>
+            String bookId <span class="token operator">=</span> dataFetchingEnvironment<span class="token punctuation">.</span><span class="token function">getArgument</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> books
+                    <span class="token punctuation">.</span><span class="token function">stream</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                    <span class="token punctuation">.</span><span class="token function">filter</span><span class="token punctuation">(</span>book <span class="token operator">-</span><span class="token operator">></span> book<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>bookId<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                    <span class="token punctuation">.</span><span class="token function">findFirst</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                    <span class="token punctuation">.</span><span class="token function">orElse</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">public</span> DataFetcher <span class="token function">getAuthorDataFetcher</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> dataFetchingEnvironment <span class="token operator">-</span><span class="token operator">></span> <span class="token punctuation">{</span>
+            Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span>String<span class="token operator">></span> book <span class="token operator">=</span> dataFetchingEnvironment<span class="token punctuation">.</span><span class="token function">getSource</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            String authorId <span class="token operator">=</span> book<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"authorId"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> authors
+                    <span class="token punctuation">.</span><span class="token function">stream</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                    <span class="token punctuation">.</span><span class="token function">filter</span><span class="token punctuation">(</span>author <span class="token operator">-</span><span class="token operator">></span> author<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>authorId<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                    <span class="token punctuation">.</span><span class="token function">findFirst</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                    <span class="token punctuation">.</span><span class="token function">orElse</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<h3 id="数据源">数据源</h3>
+<p>下面将会从这个类的数组中获取静态的书籍和作者数据。这个只是为了演示用。当然，有一点必须很明确，GraphQL不过关心数据来自于哪里。GraphQL可以从内存中的数组中，从数据库或者其他服务获取数据。</p>
+<h3 id="book-datafetcher">Book DataFetcher</h3>
+<p>我们的第一个方法<strong>getBookByIdDataFetcher</strong>返回一个<strong>DataFetcher</strong>的实现，<strong>DataFetcher</strong>有一个入参 <strong>DataFetcherEnvironment</strong>，并返回书籍内容。在我们的例子中，就是说我们需要从 <strong>bookById</strong>filed中拿到 <strong>id</strong>参数，然后通过这个<strong>id</strong>找到这本书的详细信息。如果没找到相关信息，会返回null。</p>
+<p><strong>String bookId = dataFetchingEnvironment.getArgument(“id”);</strong>中的”id” 就是从schema里的<strong>bookById</strong>field。</p>
+<pre><code class="language-javascript">type Query <span class="token punctuation">{</span>
+  <span class="token function">bookById</span><span class="token punctuation">(</span>id<span class="token punctuation">:</span> <span class="token constant">ID</span><span class="token punctuation">)</span><span class="token punctuation">:</span> Book 
+<span class="token punctuation">}</span>
+<span class="token operator">...</span></code></pre>
+<h3 id="author-datafetcher">Author DataFetcher</h3>
+<p>我们的第二个方法<strong>getAuthorDataFetcher</strong>，返回<strong>DataFetcher</strong>用于书籍对应的作者信息。对比上面提到的书籍的<strong>DataFetcher</strong>，这个地方没有参数，但是有一个书籍的instance(实例)。从父field的<strong>DataFetcher</strong>的结果可以通过<strong>getSource</strong>获取。这里有一个重要的概念：filed对应的<strong>DataFetcher</strong>方法是自上而下的执行，子孙的<strong>DataFetcherEnvironment</strong>的<strong>source</strong>属性对应着祖先的结果。</p>
+<p>然后我们可以通过已经获取到的书籍信息，获取到<strong>authorId</strong>，然后以和查询书籍信息相同的方式查询作者信息。</p>
+<h3 id="default-datafetchers">Default DataFetchers</h3>
+<p>我们只实现了两个<strong>DataFetchers</strong>。如上面提到的，如果你不指定对应的 <strong>DataFetcher</strong>，会使用默认的<strong>PropertyDataFetcher</strong>。在这个例子中，就是说 <strong>Book.id</strong>，<strong>Book.name</strong>，<strong>Book.pageCount</strong>，<strong>Author.id</strong>，<strong>Author.firstName</strong>，<strong>Author.lastName</strong>都使用的是 <strong>PropertyDataFetcher</strong>。</p>
+<p><strong>PropertyDataFetcher</strong> 尝试使用多种方式来查询Java object 的属性。比说 <strong>java.util.Map</strong>，他会简单的通过key的方式查询。这种方式在这个项目中可以正常使用，因为书籍和作者Maps和schema中定义的filed是一样的。举个例子，在schema中，我们定义了书籍的field <strong>pageCount</strong>，书籍的<strong>DataFetcher</strong>就会返回一个带有 <strong>pageCount</strong>key的Map结构。因为field的名字和<strong>Map</strong>中pageCount的key(键)是一样的，所以<strong>PropertyDataFetcher</strong>就能正常使用。</p>
+<p>现在假设另外一种情形，我们定在book <strong>Map</strong>中定义了另外一个key <strong>totalPage</strong>，而不是之前的<strong>pageCount</strong>，这时就会返回book中的 <strong>pageCount</strong>为null，因为<strong>PropertyDataFetcher</strong>不能获取正确的值。为了修复这个问题，你得在为<strong>Book.pageCount</strong>注册一个新的 <strong>DataFetcher</strong>，像下面这样：</p>
+<pre><code class="language-javascript">    <span class="token comment">// In the GraphQLProvider class</span>
+    <span class="token keyword">private</span> RuntimeWiring <span class="token function">buildWiring</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> RuntimeWiring<span class="token punctuation">.</span><span class="token function">newRuntimeWiring</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token function">newTypeWiring</span><span class="token punctuation">(</span><span class="token string">"Query"</span><span class="token punctuation">)</span>
+                        <span class="token punctuation">.</span><span class="token function">dataFetcher</span><span class="token punctuation">(</span><span class="token string">"bookById"</span><span class="token punctuation">,</span> graphQLDataFetchers<span class="token punctuation">.</span><span class="token function">getBookByIdDataFetcher</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token function">newTypeWiring</span><span class="token punctuation">(</span><span class="token string">"Book"</span><span class="token punctuation">)</span>
+                        <span class="token punctuation">.</span><span class="token function">dataFetcher</span><span class="token punctuation">(</span><span class="token string">"author"</span><span class="token punctuation">,</span> graphQLDataFetchers<span class="token punctuation">.</span><span class="token function">getAuthorDataFetcher</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+                        <span class="token comment">// This line is new: we need to register the additional DataFetcher</span>
+                        <span class="token punctuation">.</span><span class="token function">dataFetcher</span><span class="token punctuation">(</span><span class="token string">"pageCount"</span><span class="token punctuation">,</span> graphQLDataFetchers<span class="token punctuation">.</span><span class="token function">getPageCountDataFetcher</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment">// In the GraphQLDataFetchers class</span>
+    <span class="token comment">// Implement the DataFetcher</span>
+    <span class="token keyword">public</span> DataFetcher <span class="token function">getPageCountDataFetcher</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> dataFetchingEnvironment <span class="token operator">-</span><span class="token operator">></span> <span class="token punctuation">{</span>
+            Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span>String<span class="token operator">></span> book <span class="token operator">=</span> dataFetchingEnvironment<span class="token punctuation">.</span><span class="token function">getSource</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> book<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"totalPages"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token operator">...</span></code></pre>
+<p>这个<strong>DataFetcher</strong>就是修复这个问题，通过查询book <strong>Map</strong>中正确的 key。（重申一遍：在这个例子中，我们不需要这个，因为我们的键是对应的）</p>
+<h3 id="尝试一下接口">尝试一下接口</h3>
+<p>上面你就完成了创建一个可以使用的GraphQL API。启动Spring Boot 应用后，访问<strong><a href="http://localhost:8080/graphql">http://localhost:8080/graphql</a></strong>试下。</p>
+<p>最简单的尝试和探索GraphQL API的方式就是使用一些工具，如 <a href="https://github.com/prisma/graphql-playground"><strong>GraphQL Playground</strong></a>。下载然后运行它。</p>
+<p>启动后，在GraphQL Playground中访问<a href="http://localhost:8080/graphql">http://localhost:8080/graphql</a>。</p>
+<p>然后你就可以查看我们的示例API，可以获取到上面提到的结果。结果应该像下面这样：</p>
+<p><img src="./images/graphql-demo.png" alt="graphql-demo.png"/></p>
+<h3 id="完整的示例代码和更多信息">完整的示例代码和更多信息</h3>
+<p>项目完整的代码在这里：<a href="https://github.com/graphql-java/tutorials/tree/master/book-details">https://github.com/graphql-java/tutorials/tree/master/book-details</a>。</p>
+<p>更多关于GraphQL Java 的文档地址：<a href="https://www.graphql-java.com/documentation/">https://www.graphql-java.com/documentation/</a>。</p>
+<p>在这里可以提出任何问题：<a href="https://spectrum.chat/graphql-java">spectrum chat</a>。</p>
+<p>想要直接的回复，可以在 Twitter <a href="https://twitter.com/graphql_java">@GraphQL Java Twitter account</a>。</p>
+<blockquote>
+<p>Note: graphql的接口不能用一般的http请求加载，可以先用GraphQL Playground 进行测试，<a href="https://github.com/prisma/graphql-playground/releases">下载链接</a></p>
+</blockquote>
+
+      </div>
+    </div>
+  </div>
+</article>
+
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    var gitalk = new Gitalk({
+      clientID: '48c304a3b82423276209',
+      clientSecret: 'e09b744a31e79025c4dd1bc236c743eddc4ad55b',
+      repo: 'muffinyu.github.io',
+      owner: 'MuffinYu',
+      admin: [
+        'MuffinYu'
+      ],
+      id: 'GraphQL Java上手[译]',
+      // 请确保你的 location 连接小于 50 个字符，否则，插件会生成失败
+      distractionFreeMode: false
+      // 专注模式
+    })
+    gitalk.render('gitalk-container');
+  </script>

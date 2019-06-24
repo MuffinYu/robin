@@ -230,6 +230,12 @@ function compileJs() {
     .pipe(reload({ stream: true }));
 }
 // 复制静态资源
+function copyImages() {
+  return gulp
+    .src("./src/images/*")
+    .pipe(gulp.dest(config.output + "/images"))
+    .pipe(reload({ stream: true }));
+}
 function copyAsserts() {
   return gulp
     .src("./src/asserts/*")
@@ -255,7 +261,7 @@ gulp.task('js', compileJs);
 gulp.task('ejs', compileEjs);
 gulp.task('less', compileLess);
 gulp.task('markdown', compileMarkdown);
-gulp.task('copy', parallel(copyAsserts, copyPWA));
+gulp.task("copy", parallel(copyImages, copyAsserts, copyPWA));
 // gulp.task('postPick', postPick);
 
 
