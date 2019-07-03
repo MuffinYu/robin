@@ -1011,14 +1011,16 @@ td {
 .post-meta-divider {
   margin: 0 0.5em;
 }
-.posts-expand .post-tags {
-  margin-top: 40px;
+.posts-expand .post-tag {
   text-align: center;
 }
-.posts-expand .post-tags a {
+.posts-expand .post-tag span,
+.posts-expand .post-tag .post-tag-item {
   display: inline-block;
-  margin-right: 10px;
+  margin-left: 10px;
   font-size: 13px;
+  padding: 0px 4px;
+  border-bottom: 1px dashed #999;
 }
 .posts-expand .post-eof {
   margin: 80px auto 60px;

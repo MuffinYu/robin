@@ -3,6 +3,7 @@ slug: bushwick-artisan
 title: markdown-test
 layout: centered
 createAt: 1558167635294
+tag: [markdown]
 ---
 
 # 一级标题

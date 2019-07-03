@@ -2,6 +2,7 @@
 slug: bushwick-artisan
 title: 从一个需求开始学babel插件开发
 createAt: 1558594795356
+tag: [ js, babel, plugin]
 ---
 
 ### 前言

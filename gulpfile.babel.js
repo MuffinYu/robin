@@ -57,15 +57,20 @@ function postPick() {
 }
 
 function makeIndex(content) {
-  var brief = content.map(({ slug, title, layout, href, createAt, updatedAt }) => ({
-    slug,
-    title,
-    layout,
-    href,
-    body: '',
-    updatedAt: updatedAt.split('T')[0],
-    createAt: createAt ? new Date(createAt).toISOString().split('T')[0] : '-',
-  }));
+  var brief = content.map(
+    ({ slug, title, layout, href, createAt, updatedAt, tag }) => ({
+      slug,
+      title,
+      layout,
+      href,
+      body: "",
+      updatedAt: updatedAt.split("T")[0],
+      createAt: createAt
+        ? new Date(createAt).toISOString().split("T")[0]
+        : "-",
+      tag
+    })
+  );
   return new Promise((resolve, reject) => {
     gulp
       // .src("./src/*.ejs")
@@ -137,7 +142,8 @@ function compileEjs(done) {
   });
   postPick().then((content) => {
     var sorted = content.sort(
-      (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+      // (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+      (a, b) => new Date(b.createAt) - new Date(a.createAt)
     );
     Promise.all([
       ...sorted.map(makeArchives),
@@ -155,7 +161,7 @@ function compileLess() {
   return gulp
     .src([
       "./src/styles/index.less",
-      "./src/styles/iconfont.less",
+      // "./src/styles/iconfont.less",
       "./src/styles/markdown-body.less"
     ])
     .pipe(
@@ -232,7 +238,7 @@ function compileJs() {
 // 复制静态资源
 function copyImages() {
   return gulp
-    .src("./src/images/*")
+    .src("./src/images/**")
     .pipe(gulp.dest(config.output + "/images"))
     .pipe(reload({ stream: true }));
 }

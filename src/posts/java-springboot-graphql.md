@@ -2,6 +2,7 @@
 slug: bushwick-artisan
 title: GraphQL Java上手[译]
 createAt: 1560507867060
+tag: [java, GraphQL]
 ---
 <!-- https://www.graphql-java.com/tutorials/getting-started-with-spring-boot/ -->
 
