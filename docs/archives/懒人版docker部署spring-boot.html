@@ -1,0 +1,168 @@
+<article class="post post-type-normal">
+  <div class="post-block">
+    <header class="post-header">
+      <h2 class="post-title" itemprop="name headline">
+        <a href='#/archive/懒人版docker部署spring-boot' class="post-title-link" itemprop="url">懒人版docker部署spring boot</a>
+      </h2>
+      <div class="post-meta">
+        <span class="post-time">
+          <span class="post-meta-item-icon">
+            <i class="fa fa-calendar-o"></i>
+          </span>
+          <span class="post-meta-item-text">发布:</span>
+          <time title="Created: 2019-08-06" itemprop="dateCreated datePublished" datetime="2019-08-06">2019-08-06</time>
+          <span class="post-meta-divider">|</span>
+          <span class="post-meta-item-icon">
+            <i class="fa fa-calendar-check-o"></i>
+          </span>
+          <span class="post-meta-item-text">更新:</span>
+          <time title="Modified:2019-08-06" itemprop="dateModified" datetime="2019-08-06">2019-08-06</time>
+        </span>
+        
+          <div class="post-tag">
+              <i class="fa iconfont icon-tag"></i>
+              
+                <span class="post-tag-item">
+                  spring boot
+                </span>
+              
+                <span class="post-tag-item">
+                  docker
+                </span>
+              
+          </div>
+        
+        <!-- <span class="post-comments-count">
+          <span class="post-meta-divider">|</span>
+          <span class="post-meta-item-icon">
+            <i class="fa fa-comment-o"></i>
+          </span>
+          <span class="post-meta-item-text">Comments: </span>
+          <a href="/next-6-6-0-released/#comments" itemprop="discussionUrl">
+            <span class="post-comments-count disqus-comment-count" data-disqus-identifier="next-6-6-0-released/" itemprop="commentCount">0</span>
+          </a>
+        </span> -->
+      </div>
+    </header>
+    <div class="post-body">
+      <div class="markdown-body">
+        <!-- docker build -t spring-docker-demo ./ -->
+
+<blockquote>
+<p>曾经看到马老师写的一篇文章，说懒才是人类进步的阶梯——懒得爬楼梯，所以有了电梯，懒得包肉夹馍，就把馅撒在饼上，做成的披萨卖的比肉夹馍还贵，懒得泡茶，糖水装进瓶子就买，可乐卖成了最畅销的饮料…由于年代久远，具体内容和真实性已经不可考，但是文章的新颖的观点却给我留下很深刻的印象。<br/></p>
+</blockquote>
+<p>在本地开发spring boot时，要安装一次jdk和maven，配置好环境变量，到了部署的时候，还需要在服务器再安装一遍，想想都累。而搜索的很多博客，都只讲了打包好的java的docker部署，但如果打包都不想做，有没有一步到位的方法呢？当然是有的，本文将逐步讲解只有工程文件的基础上，如何打包和部署spring boot应用。</p>
+<h3 id="一、环境要求">一、环境要求</h3>
+<ul>
+<li><p>docker 自然是必不可少的（没有安装的，可以参考<a href="https://docs.docker.com/install/linux/docker-ce/ubuntu/">docker docs官方文档安装</a>）；</p>
+</li>
+<li><p>为了加快docker镜像的下载速度，建议将docker镜像修改为国内源；使用vim 编辑 <strong>/etc/docker/daemon.json</strong> 文件，没有该文件的话，新建一个，修改以下内容：</p>
+</li>
+</ul>
+<pre><code class="language-js">vim <span class="token operator">/</span>etc<span class="token operator">/</span>docker<span class="token operator">/</span>daemon<span class="token punctuation">.</span>json
+
+<span class="token punctuation">{</span>
+  <span class="token string">"registry-mirrors"</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"https://docker.mirrors.ustc.edu.cn/"</span><span class="token punctuation">,</span> <span class="token string">"https://registry.docker-cn.com/"</span><span class="token punctuation">]</span> 
+<span class="token punctuation">}</span>
+
+# 重启docker使配置其生效
+systemctl restart docker </code></pre>
+<h3 id="二、修改项目maven仓库源">二、修改项目maven仓库源</h3>
+<p>编辑项目的pom.xml文件，添加以下内容，将当前项目maven仓库源修改为阿里云的镜像；</p>
+<pre><code class="language-js"><span class="token operator">&lt;</span><span class="token operator">!</span><span class="token operator">--</span>  maven 仓库使用阿里云镜像  <span class="token operator">--</span><span class="token operator">></span>
+<span class="token operator">&lt;</span>repositories<span class="token operator">></span>
+    <span class="token operator">&lt;</span>repository<span class="token operator">></span>
+        <span class="token operator">&lt;</span>id<span class="token operator">></span>central<span class="token operator">&lt;</span><span class="token operator">/</span>id<span class="token operator">></span>
+        <span class="token operator">&lt;</span>name<span class="token operator">></span>aliyun maven<span class="token operator">&lt;</span><span class="token operator">/</span>name<span class="token operator">></span>
+        <span class="token operator">&lt;</span>url<span class="token operator">></span>http<span class="token punctuation">:</span><span class="token operator">/</span><span class="token operator">/</span>maven<span class="token punctuation">.</span>aliyun<span class="token punctuation">.</span>com<span class="token operator">/</span>nexus<span class="token operator">/</span>content<span class="token operator">/</span>groups<span class="token operator">/</span><span class="token keyword">public</span><span class="token operator">/</span><span class="token operator">&lt;</span><span class="token operator">/</span>url<span class="token operator">></span>
+        <span class="token operator">&lt;</span>layout<span class="token operator">></span><span class="token keyword">default</span><span class="token operator">&lt;</span><span class="token operator">/</span>layout<span class="token operator">></span>
+        <span class="token operator">&lt;</span><span class="token operator">!</span><span class="token operator">--</span> 是否开启发布版构件下载 <span class="token operator">--</span><span class="token operator">></span>
+        <span class="token operator">&lt;</span>releases<span class="token operator">></span>
+            <span class="token operator">&lt;</span>enabled<span class="token operator">></span><span class="token boolean">true</span><span class="token operator">&lt;</span><span class="token operator">/</span>enabled<span class="token operator">></span>
+        <span class="token operator">&lt;</span><span class="token operator">/</span>releases<span class="token operator">></span>
+        <span class="token operator">&lt;</span><span class="token operator">!</span><span class="token operator">--</span> 是否开启快照版构件下载 <span class="token operator">--</span><span class="token operator">></span>
+        <span class="token operator">&lt;</span>snapshots<span class="token operator">></span>
+            <span class="token operator">&lt;</span>enabled<span class="token operator">></span><span class="token boolean">false</span><span class="token operator">&lt;</span><span class="token operator">/</span>enabled<span class="token operator">></span>
+        <span class="token operator">&lt;</span><span class="token operator">/</span>snapshots<span class="token operator">></span>
+    <span class="token operator">&lt;</span><span class="token operator">/</span>repository<span class="token operator">></span>
+<span class="token operator">&lt;</span><span class="token operator">/</span>repositories<span class="token operator">></span></code></pre>
+<h3 id="三、编写dockerfile文件">三、编写Dockerfile文件</h3>
+<p>这是docker部署应用的最重要的一环，此文件将指明项目所需要的基础镜像，以及在此镜像上的操作，将以此文件为基础，构建项目的部署容器。</p>
+<p>在项目的根目录下，新建一个Dockerfile文件，内容如下：</p>
+<pre><code># First stage <span class="token operator">-</span> Compiling application
+<span class="token constant">FROM</span> registry<span class="token punctuation">.</span>cn<span class="token operator">-</span>hangzhou<span class="token punctuation">.</span>aliyuncs<span class="token punctuation">.</span>com<span class="token operator">/</span>acs<span class="token operator">/</span>maven<span class="token punctuation">:</span><span class="token number">3</span><span class="token operator">-</span>jdk<span class="token operator">-</span><span class="token number">8</span> <span class="token constant">AS</span> build<span class="token operator">-</span>env
+
+<span class="token constant">ENV</span> <span class="token constant">MY_HOME</span><span class="token operator">=</span><span class="token operator">/</span>app
+<span class="token constant">RUN</span> mkdir <span class="token operator">-</span>p $<span class="token constant">MY_HOME</span>
+<span class="token constant">WORKDIR</span> $<span class="token constant">MY_HOME</span>
+<span class="token constant">ADD</span> pom<span class="token punctuation">.</span>xml $<span class="token constant">MY_HOME</span>
+
+# <span class="token keyword">get</span> all the downloads out <span class="token keyword">of</span> the way
+<span class="token constant">RUN</span> <span class="token punctuation">[</span><span class="token string">"/usr/local/bin/mvn-entrypoint.sh"</span><span class="token punctuation">,</span><span class="token string">"mvn"</span><span class="token punctuation">,</span><span class="token string">"verify"</span><span class="token punctuation">,</span><span class="token string">"clean"</span><span class="token punctuation">,</span><span class="token string">"--fail-never"</span><span class="token punctuation">]</span>
+
+# add source
+<span class="token constant">ADD</span> <span class="token punctuation">.</span> $<span class="token constant">MY_HOME</span>
+
+# run maven verify
+<span class="token constant">RUN</span> <span class="token punctuation">[</span><span class="token string">"/usr/local/bin/mvn-entrypoint.sh"</span><span class="token punctuation">,</span><span class="token string">"mvn"</span><span class="token punctuation">,</span><span class="token string">"verify"</span><span class="token punctuation">,</span> <span class="token string">"-Dmaven.test.skip=true"</span><span class="token punctuation">]</span>
+
+# Second stage <span class="token operator">-</span> build image
+<span class="token constant">FROM</span> openjdk<span class="token punctuation">:</span><span class="token number">8</span><span class="token operator">-</span>jre<span class="token operator">-</span>alpine
+
+<span class="token constant">COPY</span> <span class="token operator">--</span><span class="token keyword">from</span><span class="token operator">=</span>build<span class="token operator">-</span>env <span class="token operator">/</span>app<span class="token operator">/</span>target<span class="token comment">/*.jar /app.jar
+
+ENV JAVA_OPTS=""
+ENV SERVER_PORT 8080
+
+EXPOSE ${SERVER_PORT}
+
+ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/urandom -jar /app.jar" ]</span></code></pre><p>可以看到，部署分为两个阶段：</p>
+<ul>
+<li><ol>
+<li>在maven镜像基础上，检查项目的pom.xml指明的依赖，下载完依赖后，将项目文件复制进容器，打包项目。</li>
+</ol>
+</li>
+<li><ol start="2">
+<li>在openjdk:8镜像的基础上，暴露出容器的8080端口，运行打包好的jar文件，完成部署过程。</li>
+</ol>
+</li>
+</ul>
+<p>上述两个基础镜像的版本可以根据自己的需要进行更改。但基本理念不变。</p>
+<h3 id="四、构建项目镜像">四、构建项目镜像</h3>
+<p>在此基础上，构建出一个镜像：</p>
+<pre><code>docker build <span class="token operator">-</span>t spring<span class="token operator">-</span>docker<span class="token operator">-</span>demo <span class="token punctuation">.</span><span class="token operator">/</span></code></pre><blockquote>
+<p>-t  指定生成镜像的名称<br/>./  指定Dockerfile文件的位置</p>
+</blockquote>
+<p>执行成功后，使用 <strong>docker images</strong>查看全部镜像，看到如下内容，则镜像构建成功：<br/><img src="./images/spring-boot-with-docker/docker-images.png" alt="docker images"/></p>
+<h3 id="五、运行">五、运行</h3>
+<p>运行容器：</p>
+<pre><code>docker run <span class="token operator">-</span>p <span class="token number">8083</span><span class="token punctuation">:</span><span class="token number">8080</span> <span class="token operator">-</span>d <span class="token operator">--</span>name spring<span class="token operator">-</span>docker<span class="token operator">-</span>demo spring<span class="token operator">-</span>docker<span class="token operator">-</span>demo<span class="token punctuation">:</span><span class="token number">1.1</span></code></pre><blockquote>
+<p>-p      端口映射，本地端口:容器端口<br/>-d      后台运行模式<br/>–name  自定义容器名字</p>
+</blockquote>
+<p>使用<strong>docker ps</strong>查看容器运行情况，可以看到刚运行的应用已经启动了：</p>
+<p><img src="./images/spring-boot-with-docker/docker-container.png" alt="docker images"/></p>
+<p>可以通过服务器ip加端口号访问刚才运行的应用进一步确认，这个端口号是映射在宿主机的端口号，而不是应用暴露的端口号，这里，端口号是8083；</p>
+<p>一个spring boot项目就已经打包部署成功了，更多问题，欢迎到<a href="https://github.com/MuffinYu/spring-boot-with-docker">github仓库</a>提issuse进行交流。</p>
+
+      </div>
+    </div>
+  </div>
+</article>
+
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    var gitalk = new Gitalk({
+      clientID: '48c304a3b82423276209',
+      clientSecret: 'e09b744a31e79025c4dd1bc236c743eddc4ad55b',
+      repo: 'muffinyu.github.io',
+      owner: 'MuffinYu',
+      admin: [
+        'MuffinYu'
+      ],
+      id: '懒人版docker部署spring boot',
+      // 请确保你的 location 连接小于 50 个字符，否则，插件会生成失败
+      distractionFreeMode: false
+      // 专注模式
+    })
+    gitalk.render('gitalk-container');
+  </script>
