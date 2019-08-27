@@ -16,7 +16,7 @@
             <i class="fa fa-calendar-check-o"></i>
           </span>
           <span class="post-meta-item-text">更新:</span>
-          <time title="Modified:2019-07-03" itemprop="dateModified" datetime="2019-07-03">2019-07-03</time>
+          <time title="Modified:2019-08-26" itemprop="dateModified" datetime="2019-08-26">2019-08-26</time>
         </span>
         
           <div class="post-tag">
@@ -172,7 +172,7 @@ type Author <span class="token punctuation">{</span>
 </blockquote>
 <p>现在有了这个文件，就需要通过读取这个文件来实现他，解析他，通过添加代码来加载数据。</p>
 <p>在package <strong>com.graphqljava.tutorial.bookdetails</strong> 中新建一个 <strong>GraphQLProvider</strong>class，在里面添加一个<strong>init</strong>方法，来创建 <strong>GraphQL</strong>实例：</p>
-<pre><code class="language-javascript">@Component
+<pre><code class="language-java">@Component
 <span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">GraphQLProvider</span> <span class="token punctuation">{</span>
 
     <span class="token keyword">private</span> GraphQL graphQL<span class="token punctuation">;</span>
@@ -196,7 +196,7 @@ type Author <span class="token punctuation">{</span>
 <span class="token punctuation">}</span></code></pre>
 <p>使用Guava <strong>Resources</strong> 来读取这个文件，从类路径中，然后创建一个 <strong>GraphQLSchema</strong>和<strong>GraphQL</strong> 实例。这个 <strong>GraphQL</strong>实例通过<strong>@Bean</strong>注解 <strong>graphQL()</strong>方法暴露给Spring Bean。GraphQL Java Spring适配器会使用<strong>GraphQL</strong>实例将schema暴露给HTTP，默认路径是 <strong>/graphql</strong>。</p>
 <p>还需要做的是实现 <strong>buildSchema</strong>方法，来创建<strong>GraphQLSchema</strong>实例，链接代码查询数据：</p>
-<pre><code class="language-javascript">    @Autowired
+<pre><code class="language-java">    @Autowired
     GraphQLDataFetchers graphQLDataFetchers<span class="token punctuation">;</span>
 
     <span class="token keyword">private</span> GraphQLSchema <span class="token function">buildSchema</span><span class="token punctuation">(</span><span class="token parameter">String sdl</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -226,13 +226,13 @@ type Author <span class="token punctuation">{</span>
 <h3 id="datafetchers">DataFetchers</h3>
 <p>GraphQL Java服务最重要的部分可能就是<strong>DataFetcher</strong>了：<strong>DataFetcher</strong>会在查询执行的时候，从一个field获取数据。</p>
 <p>GraphQL Java 执行一个查询的时候，会对其中的每一个field调用对应的<strong>DataFetcher</strong>。一个<strong>*DataFetcher</strong>就是一个Interface(Java 接口)，里面只有一个方法，对应的一个<strong>DataFetcherEnvironment</strong>类型的参数：</p>
-<pre><code class="language-javascript"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">DataFetcher</span><span class="token operator">&lt;</span><span class="token constant">T</span><span class="token operator">></span> <span class="token punctuation">{</span>
+<pre><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">DataFetcher</span><span class="token operator">&lt;</span><span class="token constant">T</span><span class="token operator">></span> <span class="token punctuation">{</span>
     <span class="token constant">T</span> <span class="token keyword">get</span><span class="token punctuation">(</span>DataFetchingEnvironment dataFetchingEnvironment<span class="token punctuation">)</span> throws Exception<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
 <p>注意：schema中的<strong>每一个</strong>field都有一个<strong>DataFetcher</strong>与之关。如果你没有指定field对应的任何<strong>DataFetcher</strong>，会使用默认的<strong>PropertyDataFetcher</strong>。更多的细节会在更多详情中加以讨论。</p>
 <p>现在创建一个class <strong>GraphQLDataFethcers</strong>，包含一个简单的书籍列表和作者列表。</p>
 <p>文件内容如下，其中的细节在下面会加以说明：</p>
-<pre><code class="language-javascript">@Component
+<pre><code class="language-java">@Component
 <span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">GraphQLDataFetchers</span> <span class="token punctuation">{</span>
 
     <span class="token keyword">private</span> <span class="token keyword">static</span> List<span class="token operator">&lt;</span>Map<span class="token operator">&lt;</span>String<span class="token punctuation">,</span> String<span class="token operator">>></span> books <span class="token operator">=</span> Arrays<span class="token punctuation">.</span><span class="token function">asList</span><span class="token punctuation">(</span>
@@ -290,7 +290,7 @@ type Author <span class="token punctuation">{</span>
 <h3 id="book-datafetcher">Book DataFetcher</h3>
 <p>我们的第一个方法<strong>getBookByIdDataFetcher</strong>返回一个<strong>DataFetcher</strong>的实现，<strong>DataFetcher</strong>有一个入参 <strong>DataFetcherEnvironment</strong>，并返回书籍内容。在我们的例子中，就是说我们需要从 <strong>bookById</strong>filed中拿到 <strong>id</strong>参数，然后通过这个<strong>id</strong>找到这本书的详细信息。如果没找到相关信息，会返回null。</p>
 <p><strong>String bookId = dataFetchingEnvironment.getArgument(“id”);</strong>中的”id” 就是从schema里的<strong>bookById</strong>field。</p>
-<pre><code class="language-javascript">type Query <span class="token punctuation">{</span>
+<pre><code class="language-java">type Query <span class="token punctuation">{</span>
   <span class="token function">bookById</span><span class="token punctuation">(</span>id<span class="token punctuation">:</span> <span class="token constant">ID</span><span class="token punctuation">)</span><span class="token punctuation">:</span> Book 
 <span class="token punctuation">}</span>
 <span class="token operator">...</span></code></pre>
@@ -301,7 +301,7 @@ type Author <span class="token punctuation">{</span>
 <p>我们只实现了两个<strong>DataFetchers</strong>。如上面提到的，如果你不指定对应的 <strong>DataFetcher</strong>，会使用默认的<strong>PropertyDataFetcher</strong>。在这个例子中，就是说 <strong>Book.id</strong>，<strong>Book.name</strong>，<strong>Book.pageCount</strong>，<strong>Author.id</strong>，<strong>Author.firstName</strong>，<strong>Author.lastName</strong>都使用的是 <strong>PropertyDataFetcher</strong>。</p>
 <p><strong>PropertyDataFetcher</strong> 尝试使用多种方式来查询Java object 的属性。比说 <strong>java.util.Map</strong>，他会简单的通过key的方式查询。这种方式在这个项目中可以正常使用，因为书籍和作者Maps和schema中定义的filed是一样的。举个例子，在schema中，我们定义了书籍的field <strong>pageCount</strong>，书籍的<strong>DataFetcher</strong>就会返回一个带有 <strong>pageCount</strong>key的Map结构。因为field的名字和<strong>Map</strong>中pageCount的key(键)是一样的，所以<strong>PropertyDataFetcher</strong>就能正常使用。</p>
 <p>现在假设另外一种情形，我们定在book <strong>Map</strong>中定义了另外一个key <strong>totalPage</strong>，而不是之前的<strong>pageCount</strong>，这时就会返回book中的 <strong>pageCount</strong>为null，因为<strong>PropertyDataFetcher</strong>不能获取正确的值。为了修复这个问题，你得在为<strong>Book.pageCount</strong>注册一个新的 <strong>DataFetcher</strong>，像下面这样：</p>
-<pre><code class="language-javascript">    <span class="token comment">// In the GraphQLProvider class</span>
+<pre><code class="language-java">    <span class="token comment">// In the GraphQLProvider class</span>
     <span class="token keyword">private</span> RuntimeWiring <span class="token function">buildWiring</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
         <span class="token keyword">return</span> RuntimeWiring<span class="token punctuation">.</span><span class="token function">newRuntimeWiring</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
                 <span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token function">newTypeWiring</span><span class="token punctuation">(</span><span class="token string">"Query"</span><span class="token punctuation">)</span>

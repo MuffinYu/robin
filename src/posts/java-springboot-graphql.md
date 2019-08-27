@@ -167,7 +167,7 @@ type Author {
 
 在package **com.graphqljava.tutorial.bookdetails** 中新建一个 **GraphQLProvider**class，在里面添加一个**init**方法，来创建 **GraphQL**实例：
 
-```javascript
+```java
 @Component
 public class GraphQLProvider {
 
@@ -196,7 +196,7 @@ public class GraphQLProvider {
 
 还需要做的是实现 **buildSchema**方法，来创建**GraphQLSchema**实例，链接代码查询数据：
 
-```javascript
+```java
     @Autowired
     GraphQLDataFetchers graphQLDataFetchers;
 
@@ -236,7 +236,7 @@ GraphQL Java服务最重要的部分可能就是**DataFetcher**了：**DataFetch
 
 GraphQL Java 执行一个查询的时候，会对其中的每一个field调用对应的**DataFetcher**。一个***DataFetcher**就是一个Interface(Java 接口)，里面只有一个方法，对应的一个**DataFetcherEnvironment**类型的参数：
 
-```javascript
+```java
 public interface DataFetcher<T> {
     T get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception;
 }
@@ -249,7 +249,7 @@ public interface DataFetcher<T> {
 
 文件内容如下，其中的细节在下面会加以说明：
 
-```javascript
+```java
 @Component
 public class GraphQLDataFetchers {
 
@@ -315,7 +315,7 @@ public class GraphQLDataFetchers {
 
 **String bookId = dataFetchingEnvironment.getArgument("id");**中的"id" 就是从schema里的**bookById**field。
 
-```javascript
+```java
 type Query {
   bookById(id: ID): Book 
 }
@@ -336,7 +336,7 @@ type Query {
 
 现在假设另外一种情形，我们定在book **Map**中定义了另外一个key **totalPage**，而不是之前的**pageCount**，这时就会返回book中的 **pageCount**为null，因为**PropertyDataFetcher**不能获取正确的值。为了修复这个问题，你得在为**Book.pageCount**注册一个新的 **DataFetcher**，像下面这样：
 
-```javascript
+```java
     // In the GraphQLProvider class
     private RuntimeWiring buildWiring() {
         return RuntimeWiring.newRuntimeWiring()

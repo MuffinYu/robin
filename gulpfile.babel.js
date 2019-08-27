@@ -190,8 +190,11 @@ marked.setOptions({
   gfm: true,
   smartypants: true,
   xhtml: true,
-  highlight: code => {
-    // console.log('code', code);
+  highlight: (code, type) => {
+    console.log("code", type, code.slice(0, 20));
+    // if (type === "java") {
+    //   return Prism.highlight(code, Prism.languages.java, "java");
+    // }
     return Prism.highlight(code, Prism.languages.javascript, "javascript");
   }
 });

@@ -1,0 +1,185 @@
+<article class="post post-type-normal">
+  <div class="post-block">
+    <header class="post-header">
+      <h2 class="post-title" itemprop="name headline">
+        <a href='#/archive/Java-SE-基础之List' class="post-title-link" itemprop="url">Java SE 基础之List</a>
+      </h2>
+      <div class="post-meta">
+        <span class="post-time">
+          <span class="post-meta-item-icon">
+            <i class="fa fa-calendar-o"></i>
+          </span>
+          <span class="post-meta-item-text">发布:</span>
+          <time title="Created: 2019-08-26" itemprop="dateCreated datePublished" datetime="2019-08-26">2019-08-26</time>
+          <span class="post-meta-divider">|</span>
+          <span class="post-meta-item-icon">
+            <i class="fa fa-calendar-check-o"></i>
+          </span>
+          <span class="post-meta-item-text">更新:</span>
+          <time title="Modified:2019-08-26" itemprop="dateModified" datetime="2019-08-26">2019-08-26</time>
+        </span>
+        
+          <div class="post-tag">
+              <i class="fa iconfont icon-tag"></i>
+              
+                <span class="post-tag-item">
+                  Java
+                </span>
+              
+                <span class="post-tag-item">
+                  List
+                </span>
+              
+          </div>
+        
+        <!-- <span class="post-comments-count">
+          <span class="post-meta-divider">|</span>
+          <span class="post-meta-item-icon">
+            <i class="fa fa-comment-o"></i>
+          </span>
+          <span class="post-meta-item-text">Comments: </span>
+          <a href="/next-6-6-0-released/#comments" itemprop="discussionUrl">
+            <span class="post-comments-count disqus-comment-count" data-disqus-identifier="next-6-6-0-released/" itemprop="commentCount">0</span>
+          </a>
+        </span> -->
+      </div>
+    </header>
+    <div class="post-body">
+      <div class="markdown-body">
+        <p>java中提供的List的实现主要有ArrayList、LinkedList、CopyOnWriteArrayList，另外还有两个古老的类Vector和Stack。</p>
+<h3 id="一、arraylist-基础">一、ArrayList 基础</h3>
+<p>  <img src="./images/java-se-basic-list/ArrayList.png" alt="ArrayList-structure"/></p>
+<p>  ArrayList是一种以数组实现的List，与数组相比，它具有动态扩展的能力，因此也可称之为动态数组。</p>
+<p>  ArrayList实现了List，提供了基础的添加、删除、遍历等操作。</p>
+<p>  ArrayList实现了RandomAccess，提供了随机访问的能力。</p>
+<p>  ArrayList实现了Cloneable，可以被克隆。</p>
+<p>  ArrayList实现了Serializable，可以被序列化</p>
+<h3 id="二、linkedlist-基础">二、LinkedList 基础</h3>
+<p>  <img src="./images/java-se-basic-list/LinkedList.png" alt="LinkedList-structure"/></p>
+<p>  LinkedList是一个以双向链表实现的List，它除了作为List使用，还可以作为队列或者栈来使用。</p>
+<p>  LinkedList在功能上等于ArrayList + ArrayDeque。</p>
+<p>  通过继承体系，我们可以看到LinkedList不仅实现了List接口，还实现了Queue和Deque接口，所以它既能作为List使用，也能作为双端队列使用，当然也可以作为栈使用。</p>
+<h3 id="三、copyonwritearraylist-基础">三、CopyOnWriteArrayList 基础</h3>
+<p>  <img src="./images/java-se-basic-list/CopyOnWriteArrayList.png" alt="CopyOnWriteArrayList-structure"/></p>
+<p>  CopyOnWriteArrayList是ArrayList的线程安全版本，内部也是通过数组实现，每次对数组的修改都完全拷贝一份新的数组来修改，修改完了再替换掉老数组，这样保证了只阻塞写操作，不阻塞读操作，实现读写分离。</p>
+<p>（1）CopyOnWriteArrayList使用ReentrantLock重入锁加锁，保证线程安全；</p>
+<p>（2）CopyOnWriteArrayList的写操作都要先拷贝一份新数组，在新数组中做修改，修改完了再用新数组替换老数组，所以空间复杂度是O(n)，性能比较低下；</p>
+<p>（3）CopyOnWriteArrayList的读操作支持随机访问，时间复杂度为O(1)；</p>
+<p>（4）CopyOnWriteArrayList采用读写分离的思想，读操作不加锁，写操作加锁，且写操作占用较大内存空间，所以适用于读多写少的场合；</p>
+<p>（5）CopyOnWriteArrayList只保证最终一致性，不保证实时一致性；</p>
+<h3 id="四、list-相关问题">四、List 相关问题</h3>
+<h4 id="1-arraylist和linkedlist有什么区别？">1. ArrayList和LinkedList有什么区别？</h4>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>ArrayList</th>
+<th>LinkedList</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>实现方式</td>
+<td>底层是数组，基于索引的数据接口</td>
+<td>底层是双向链表</td>
+</tr>
+<tr>
+<td>随机访问</td>
+<td>随机访问速度快（O(1)）</td>
+<td>不支持随机访问</td>
+</tr>
+<tr>
+<td>插入/删除</td>
+<td>需要考虑改变数组大小，扩容时需要复制数组到新数组，需要移动数组元素(O(n))</td>
+<td>不需要改变数组大小</td>
+</tr>
+</tbody></table>
+<h4 id="2-arraylist是怎么扩容的？">2. ArrayList是怎么扩容的？</h4>
+<p>（1）检查是否需要扩容；</p>
+<p>（2）如果elementData等于DEFAULTCAPACITY_EMPTY_ELEMENTDATA(空数组)，则初始化容量大小为DEFAULT_CAPACITY(10)；</p>
+<p>（3）新容量是老容量的1.5倍（oldCapacity + (oldCapacity &gt;&gt; 1)）；如果加了这么多容量发现比需要的容量还小，则以需要的容量为准；如果新容量已经超过最大容量了，则使用最大容量。</p>
+<p>（4）创建新容量的数组并把老数组拷贝到新数组(Arrays.copyOf(elementData, newCapacity))；</p>
+<h4 id="3-arraylist是怎么实现序列化和反序列化的？">3. ArrayList是怎么实现序列化和反序列化的？</h4>
+<pre><code class="language-java"><span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">writeObject</span><span class="token punctuation">(</span>java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>ObjectOutputStream s<span class="token punctuation">)</span>
+        throws java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>IOException<span class="token punctuation">{</span>
+    <span class="token comment">// 防止序列化期间有修改</span>
+    int expectedModCount <span class="token operator">=</span> modCount<span class="token punctuation">;</span>
+    <span class="token comment">// 写出非transient非static属性（会写出size属性）</span>
+    s<span class="token punctuation">.</span><span class="token function">defaultWriteObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// 写出元素个数</span>
+    s<span class="token punctuation">.</span><span class="token function">writeInt</span><span class="token punctuation">(</span>size<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// 依次写出元素</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>int i<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">;</span> i<span class="token operator">&lt;</span>size<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        s<span class="token punctuation">.</span><span class="token function">writeObject</span><span class="token punctuation">(</span>elementData<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment">// 如果有修改，抛出异常</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>modCount <span class="token operator">!=</span> expectedModCount<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">ConcurrentModificationException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">readObject</span><span class="token punctuation">(</span>java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>ObjectInputStream s<span class="token punctuation">)</span>
+        throws java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>IOException<span class="token punctuation">,</span> ClassNotFoundException <span class="token punctuation">{</span>
+    <span class="token comment">// 声明为空数组</span>
+    elementData <span class="token operator">=</span> <span class="token constant">EMPTY_ELEMENTDATA</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// 读入非transient非static属性（会读取size属性）</span>
+    s<span class="token punctuation">.</span><span class="token function">defaultReadObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// 读入元素个数，没什么用，只是因为写出的时候写了size属性，读的时候也要按顺序来读</span>
+    s<span class="token punctuation">.</span><span class="token function">readInt</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>size <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">// 计算容量</span>
+        int capacity <span class="token operator">=</span> <span class="token function">calculateCapacity</span><span class="token punctuation">(</span>elementData<span class="token punctuation">,</span> size<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        SharedSecrets<span class="token punctuation">.</span><span class="token function">getJavaOISAccess</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">checkArray</span><span class="token punctuation">(</span>s<span class="token punctuation">,</span> Object<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">.</span>class<span class="token punctuation">,</span> capacity<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 检查是否需要扩容</span>
+        <span class="token function">ensureCapacityInternal</span><span class="token punctuation">(</span>size<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        Object<span class="token punctuation">[</span><span class="token punctuation">]</span> a <span class="token operator">=</span> elementData<span class="token punctuation">;</span>
+        <span class="token comment">// 依次读取元素到数组中</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span>int i<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">;</span> i<span class="token operator">&lt;</span>size<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            a<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> s<span class="token punctuation">.</span><span class="token function">readObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p>查看writeObject()方法可知，先调用s.defaultWriteObject()方法，再把size写入到流中，再把元素一个一个的写入到流中。</p>
+<p>一般地，只要实现了Serializable接口即可自动序列化，writeObject()和readObject()是为了自己控制序列化的方式，这两个方法必须声明为private，在java.io.ObjectStreamClass#getPrivateMethod()方法中通过反射获取到writeObject()这个方法。</p>
+<p>在ArrayList的writeObject()方法中先调用了s.defaultWriteObject()方法，这个方法是写入非static非transient的属性，在ArrayList中也就是size属性。同样地，在readObject()方法中先调用了s.defaultReadObject()方法解析出了size属性。</p>
+<p>elementData定义为transient的优势，自己根据size序列化真实的元素，而不是根据数组的长度序列化元素，减少了空间占用。</p>
+<h4 id="4-集合的方法toarray有什么问题？">4. 集合的方法toArray()有什么问题？</h4>
+<h4 id="5-什么是fail-fast？">5. 什么是fail-fast？</h4>
+<p>fail-fast 机制，即快速失败机制，是java集合(Collection)中的一种错误检测机制。当在迭代集合的过程中该集合在结构上发生改变的时候，就有可能会发生fail-fast，即抛出ConcurrentModificationException异常。fail-fast机制并不保证在不同步的修改下一定会抛出异常，它只是尽最大努力去抛出，所以这种机制一般仅用于检测bug。</p>
+<h4 id="6copyonwritearraylist是怎么保证并发安全的？">6.CopyOnWriteArrayList是怎么保证并发安全的？</h4>
+<p>CopyOnWriteArrayList使用ReentrantLock重入锁加锁，保证线程安全；</p>
+<h4 id="7-copyonwritearraylist的实现采用了什么思想？">7. CopyOnWriteArrayList的实现采用了什么思想？</h4>
+<p>CopyOnWriteArrayList采用读写分离的思想，读操作不加锁，写操作加锁，且写操作占用较大内存空间，所以适用于读多写少的场合；</p>
+<h4 id="8copyonwritearraylist是不是强一致性的？">8.CopyOnWriteArrayList是不是强一致性的？</h4>
+<p>不是，CopyOnWriteArrayList只保证最终一致性，不保证实时一致性；</p>
+<h4 id="9copyonwritearraylist为什么没有size属性？">9.CopyOnWriteArrayList为什么没有size属性？</h4>
+<p>因为每次修改都是拷贝一份正好可以存储目标个数元素的数组，所以不需要size属性了，数组的长度就是集合的大小，而不像ArrayList数组的长度实际是要大于集合的大小的。</p>
+
+      </div>
+    </div>
+  </div>
+</article>
+
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    var gitalk = new Gitalk({
+      clientID: '48c304a3b82423276209',
+      clientSecret: 'e09b744a31e79025c4dd1bc236c743eddc4ad55b',
+      repo: 'muffinyu.github.io',
+      owner: 'MuffinYu',
+      admin: [
+        'MuffinYu'
+      ],
+      id: 'Java SE 基础之List',
+      // 请确保你的 location 连接小于 50 个字符，否则，插件会生成失败
+      distractionFreeMode: false
+      // 专注模式
+    })
+    gitalk.render('gitalk-container');
+  </script>

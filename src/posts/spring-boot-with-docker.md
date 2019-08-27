@@ -31,7 +31,7 @@ systemctl restart docker
 ### 二、修改项目maven仓库源
 
 编辑项目的pom.xml文件，添加以下内容，将当前项目maven仓库源修改为阿里云的镜像；
-```js
+```java
 <!--  maven 仓库使用阿里云镜像  -->
 <repositories>
     <repository>

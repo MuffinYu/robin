@@ -22,7 +22,7 @@ var filesToCache = [
   "./index.html",
   "./scripts/index.js",
   "./styles/index.css",
-  "./styles/iconfont.css",
+  // "./styles/iconfont.css",
   "./favicon.ico",
   "./asserts/icon-32x32.png",
   "./asserts/icon-128x128.png",
