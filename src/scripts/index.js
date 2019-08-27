@@ -137,7 +137,7 @@
         (mainHeight - document.body.clientHeight)) *
         100
     );
-
+    percent = percent > 100 ? 100 : percent;
     scrollPercent.textContent = percent + "%";
     // aside 吸顶部
     var ele = app.aside || document.getElementById("sidebar");
