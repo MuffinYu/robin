@@ -105,7 +105,7 @@ function makeArchivesCatalog(content) {
 
         fs.writeFile(`${config.output}/archives.html`, str, err => {
           if (err) throw err;
-          console.log("文章列表 文件已被保存");
+          // console.log("文章列表 文件已被保存");
           resolve();
         });
       }
@@ -122,7 +122,7 @@ function makeArchives(item) {
         str,
         err => {
           if (err) throw err;
-          console.log("文件已被保存");
+          // console.log("文件已被保存");
           resolve();
         }
       );
@@ -192,9 +192,9 @@ marked.setOptions({
   xhtml: true,
   highlight: (code, type) => {
     console.log("code", type, code.slice(0, 20));
-    // if (type === "java") {
-    //   return Prism.highlight(code, Prism.languages.java, "java");
-    // }
+    if (type === "java") {
+      return Prism.highlight(code, Prism.languages.javascript, "java");
+    }
     return Prism.highlight(code, Prism.languages.javascript, "javascript");
   }
 });
