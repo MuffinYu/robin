@@ -19,7 +19,15 @@
       // 菜单选项 遮罩层 element
       navPopupMenu: null,
       // 菜单选项
-      navMenu: null // 菜单选项列表
+      navMenu: null,
+      // 菜单选项列表,
+      clinetWidth: document.body.clientWidth,
+      // 页面宽度
+      clientHeight: document.body.clientHeight // 页面高度
+
+    };
+    var dataCache = {
+      lastOffsetTop: 0 // 缓存上次滚动位置
 
     }; // 节流
 
@@ -82,26 +90,7 @@
             return response.text();
           }
         }).then(function (myJson) {
-          document.getElementById("posts").innerHTML = myJson; // var scriptEle = document.createElement('script');
-          // scriptEle.type = 'text/javascript';
-          // scriptEle.innerHTML = `
-          //   var gitalk = new Gitalk({
-          //     clientID: '48c304a3b82423276209',
-          //     clientSecret: 'e09b744a31e79025c4dd1bc236c743eddc4ad55b',
-          //     repo: 'muffinyu.github.io',
-          //     owner: 'MuffinYu',
-          //     admin: [
-          //       'MuffinYu'
-          //     ],
-          //     id: ${archive},
-          //     // 请确保你的 location 连接小于 50 个字符，否则，插件会生成失败
-          //     distractionFreeMode: false
-          //     // 专注模式
-          //   })
-          //   gitalk.render('gitalk-container');
-          // `;
-          // documen.body.appendChild(scriptEle);
-
+          document.getElementById("posts").innerHTML = myJson;
           setTimeout(function () {
             getPageHeight();
             var gitalk = new Gitalk({
@@ -142,28 +131,40 @@
 
 
     function handleScroll(mainHeight) {
-      // if (!app.mainHeight) {
-      //   var contentHeight = document.getElementById("content").clientHeight;
-      //   var mainHeight = document.getElementById("main").clientHeight;
-      //   app.mainHeight =
-      //     mainHeight > contentHeight ? mainHeight : contentHeight;
-      // }
-      // var mainHeight = app.mainHeight;
-      // console.log('handle', Math.abs(document.body.getBoundingClientRect().top), mainHeight -document.body.clientHeight);
       var scrollPercent = app.scrollPercent || document.getElementById("scroll-percent");
-      var percent = Math.floor(Math.abs(document.body.getBoundingClientRect().top) / (mainHeight - document.body.clientHeight) * 100);
-      percent = percent > 100 ? 100 : percent;
-      scrollPercent.textContent = percent + "%"; // aside 吸顶部
+      var offsetTop = document.body.getBoundingClientRect().top;
 
-      var ele = app.aside || document.getElementById("sidebar");
+      if (app.clinetWidth < 991) {
+        // 小屏幕
+        console.log("offsetTop", offsetTop, dataCache.lastOffsetTop - offsetTop);
+        var direction = dataCache.lastOffsetTop - offsetTop > 0 ? 0 : 1; // 1: 向s上滚动 || 未动；0:向下滚动
 
-      if (ele) {
-        var offsetTop = ele.getBoundingClientRect().top;
-
-        if (offsetTop < 20) {
-          ele.children[0].classList.add("affix");
+        if (direction < 1) {
+          // 下
+          document.getElementsByClassName("site-subtitle")[0].style.display = "none";
+          document.getElementsByClassName("site-meta")[0].style.padding = "0px";
         } else {
-          ele.children[0].classList.remove("affix");
+          document.getElementsByClassName("site-subtitle")[0].style.display = "block";
+          document.getElementsByClassName("site-meta")[0].style.padding = "20px 0";
+        }
+
+        dataCache.lastOffsetTop = offsetTop;
+      } else {
+        // 大屏幕
+        var percent = Math.floor(Math.abs(offsetTop) / (mainHeight - document.body.clientHeight) * 100);
+        percent = percent > 100 ? 100 : percent;
+        scrollPercent.textContent = percent + "%"; // aside 吸顶部
+
+        var ele = app.aside || document.getElementById("sidebar");
+
+        if (ele) {
+          var _offsetTop = ele.getBoundingClientRect().top;
+
+          if (_offsetTop < 20) {
+            ele.children[0].classList.add("affix");
+          } else {
+            ele.children[0].classList.remove("affix");
+          }
         }
       }
     } // 添加UI-element 事件

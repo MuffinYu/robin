@@ -519,12 +519,11 @@ td {
   }
   .site-meta {
     box-shadow: 0 0 16px rgba(0, 0, 0, 0.5);
+    transition: padding 0.4s ease-out;
   }
 }
 .site-nav-toggle {
   left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
   display: none;
   position: absolute;
 }
@@ -684,8 +683,7 @@ td {
 }
 .menu .menu-item .badge {
   display: inline-block;
-  padding: 2px 5px;
-  font-weight: 700;
+  padding: 3px 10px 2px 8px;
   line-height: 1;
   color: #fff;
   text-align: center;
@@ -696,6 +694,7 @@ td {
   float: right;
   margin: 0.35em 0 0 0;
   text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
+  margin-top: 10px;
 }
 .menu .menu-item br {
   display: none;
@@ -1419,11 +1418,17 @@ td {
   position: relative;
   cursor: pointer;
 }
-.archive-list-item::before {
+.archive-list-item:hover {
+  border-bottom-color: #666;
+}
+.archive-list-item .archive-meta {
+  position: relative;
+}
+.archive-list-item .archive-meta::before {
   content: ' ';
   position: absolute;
-  left: 0;
-  top: 42px;
+  left: -10px;
+  top: 9px;
   width: 6px;
   height: 6px;
   margin-left: -6px;
@@ -1435,19 +1440,30 @@ td {
   transition-delay: 0s;
   transition-property: background;
 }
-.archive-list-item:hover {
-  border-bottom-color: #666;
-}
-.archive-list-item:hover::before {
+.archive-list-item:hover .archive-meta::before {
   background: #222;
 }
-.archive-meta {
-  font-size: 12px;
-  display: inline-block;
+@media (min-width: 567px) {
+  .archive-meta {
+    font-size: 12px;
+    display: inline-block;
+  }
+  .archive-title {
+    font-size: 16px;
+    display: inline-block;
+  }
 }
-.archive-title {
-  font-size: 16px;
-  display: inline-block;
+@media (max-width: 567px) {
+  .archive-meta {
+    font-size: 12px;
+    display: inline-block;
+  }
+  .archive-title {
+    font-size: 16px;
+    display: block;
+    margin-top: 4px;
+    padding-left: 12px;
+  }
 }
 .archive-href {
   border: none;
