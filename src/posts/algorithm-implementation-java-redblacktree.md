@@ -424,9 +424,10 @@ public void RB_INSERT_FIXUP(RedBlackTree T, RedBlackTreeNode m) {
   **情况3：**d节点有一个子节点；
 
 
-  情况1下，需要找到d节点的后继节点，即d右子树的最小节点，将后继节点的值替换到删除节点位置，颜色不需要变化，然后将删除d节点的情况变为删除后继节点的情况，即将后继节点赋值给d，因为后继节点肯定只有右子树，符合情况2下的一种情况，下面再详细介绍；
+  情况1下，先找到d节点的后继节点，即d右子树的最小节点，将后继节点的值替换到删除节点位置，颜色不需要变化，然后将删除d节点的情况变为删除后继节点的情况，即将后继节点赋值给d，因为后继节点肯定只有右子树，符合情况2下的一种情况，下面再详细介绍；
 
   查找后继节点的代码实现：
+  
   ```java
 
     // RedBlackTree.java
@@ -443,354 +444,93 @@ public void RB_INSERT_FIXUP(RedBlackTree T, RedBlackTreeNode m) {
    }
   ```
 
-  情况2下分为多种情况，下面一一介绍：
-
-  如果d为红色节点或者为根节点，直接删除；
-
-  如果d为黑色节点，先考虑d是左节点的情况（d是右节点的情况是镜像的处理方式）；
-  情况2-1：兄弟节点s为红色，s的子节点一定为黑色；d的父节点p左旋，p节点变为红色，s节点变为黑色，变换后 d的兄弟节点变为s的左节点，肯定为黑色，变成情况2-3或情况2-5；
-
-  ![情况2-1：兄弟节点s为红色](./images/red-black-tree/red-black-tree-11.png)
-  
-  情况2-3：兄弟节点s为黑色（情况1下经过变换后，s变成之前s的左子节点，也为黑色，如下图），近侄子为红色，即s左节点；s节点右旋，s变为红色，sl变为黑色（因为之前s一定为黑色，sl一定为红色），变成情况2-5继续处理；
-  ![情况2-3：兄弟节点s为黑色，近侄子为红色](./images/red-black-tree/red-black-tree-12.png)
-
-  情况2-5：兄弟节点为黑色，远侄子（兄弟节点右节点）为红色；将p节点左旋，兄弟节点设为p节点颜色，p节点设置为黑色，删除d节点，完成删除。
-  ![情况2-5：兄弟节点s为黑色，远侄子为红色](./images/red-black-tree/red-black-tree-13.png)
-
-  情况2-2，2-4，2-6即是1，3，5的镜像对称，d为右节点，请自行思考下；
-
-  情况2-7：兄弟节点和兄弟节点子节点均为黑色：
-
-    情况2-7-1：父节点为红色；将父节点变为黑色，兄弟节点变为红色，删除d节点，结束；
-
-  ![情况2-7-1：父节点为红色](./images/red-black-tree/red-black-tree-14.png)
-
-    情况2-7-2：父节点为黑色；将兄弟节点变为红色，删除d节点，从父节点开始，进行树的平衡操作；
-
-  ![情况2-7-1：父节点为黑色黑色](./images/red-black-tree/red-black-tree-15.png)
-
-  具体实现代码如下：
+   删除节点代码实现：
 
   ```java
     // RedBlackTree.java
-
    /**
     * 删除节点
     * @param T
-    * @param d
+    * @param z
     */
-   public void RB_DELETE(RedBlackTree T, RedBlackTreeNode d) {
-      RedBlackTreeNode nil = RedBlackTree.nil;
-      RedBlackTreeNode y = null;
-
-      if (IsNil(d.getRight()) == false && IsNil(d.getLeft()) == false) {
-         /**
-          * 情形1：有左右节点
-          * 后继节点是右子树中最小的值
-          * 找到后继节点，后继节点的值替换当前节点值，只替换值，不替换颜色
-          * 并把后继节点设为待删除节点，继续下述判断
-          * 注意：此时待删除节点变为了后继节点
-          * 后继节点只有右子树
-          *
-          */
-         y = TREE_MINIMUM(d.getRight());
-         d.setKey(y.getKey());
-         d = y;
-      }
-      if (IsNil(d.getLeft()) == true && IsNil(d.getRight()) == true) {
-         /**
-          * 情形2：没有左右节点
-          */
-         if (d.getParent() == null || IsNil(d.getParent())) {
-            // 根节点 直接删除
-            T.setRoot(nil);
-         } else {
-            // 非根节点
-            if (d.getColor() == NodeColor.Red) {
-               // 红色节点 直接删除
-               if (d.getParent().getLeft() == d){
-                  // d是左节点
-                  d.getParent().setLeft(nil);
-               } else {
-                  // d是右节点
-                  d.getParent().setRight(nil);
-               }
-            } else {
-               // d 黑色节点
-               // 父亲节点
-               RedBlackTreeNode p = d.getParent();
-               // 兄弟节点
-               RedBlackTreeNode s = null;
-
-               if (p.getLeft() == d) {
-                  // d 是父节点左节点
-                  s = p.getRight();
-                  if (s.getColor() == NodeColor.Red) {
-                     /**
-                      * 情况2-1
-                      * d 是父节点左节点，兄弟节点是红色
-                      * p节点左旋，p节点变为红色，s节点变为黑色
-                      * 变换后 d的兄弟节点肯定为黑色，变成情况2-3或情况2-5
-                      */
-                     RedBlackTreeNode sl = s.getLeft();
-                     LEFT_ROTATE(T, p);
-                     p.setColor(NodeColor.Red);
-                     s.setColor(NodeColor.Black);
-                     // d的兄弟节点变为之前兄弟节点的左节点，一定为黑色
-                     s = d.getParent().getRight();
-                  }
-                  if (s.getLeft().getColor() == NodeColor.Red){
-                     /**
-                      * 情况2-3
-                      * 兄弟节点为黑色，近侄子节点为红色
-                      * 即兄弟节点右节点为黑色，左节点为红色
-                      * s节点右旋， s和sl换色
-                      * 变换前 s一定为黑色，sl一定为红色
-                      * 变换后  s为红色，sl为黑色
-                      * d的兄弟节点变为之前兄弟节点的左节点sl
-                      * 变成情况2-5继续处理
-                      */
-                     RedBlackTreeNode sl = s.getLeft();
-                     s.setColor(NodeColor.Red);
-                     s.getLeft().setColor(NodeColor.Black);
-                     s = sl;
-                     RIGHT_ROTATE(T, s);
-                  }
-                  if (s.getRight().getColor() == NodeColor.Red){
-                     /**
-                      * 情况2-5
-                      * 兄弟节点为黑色，远侄子为红色
-                      * 即兄弟节点右节点为红色
-                      * p右旋， s设为p的颜色，p设为黑色，sr设为黑色，删除d节点
-                      */
-                     LEFT_ROTATE(T, p);
-                     s.setColor(p.getColor());
-                     p.setColor(NodeColor.Black);
-                     s.getRight().setColor(NodeColor.Black);
-                     // 删除d，完成删除操作
-                     d.getParent().setLeft(nil);
-                     return;
-                  }
-                  /**
-                   * 情况2-7右节点和右节点子节点均为黑色
-                   */
-                  if (p.getColor() == NodeColor.Red) {
-                     /**
-                      * 情况2-7-1
-                      * 父节点为红色
-                      * 将父节点变为黑色
-                      * 兄弟节点变为红色
-                      * 删除节点 结束
-                      */
-                     p.setColor(NodeColor.Black);
-                     s.setColor(NodeColor.Red);
-                     p.setLeft(nil);
-                     return;
-                  } else {
-                     /**
-                      * 情况2-7-2
-                      * 父节点为黑色
-                      * s类似新插入的节点
-                      * 进行变色插入变色调整
-                      * 删除 d节点
-                      */
-                     p.setLeft(nil);
-                     s.setColor(NodeColor.Red);
-                     RB_DELETE_FIXUP(T, p);
-                     return;
-                  }
-
-               } else {
-                  // d 是父节点右节点
-                  s = p.getLeft();
-                  if (s.getColor() == NodeColor.Red) {
-                     /**
-                      * 情况2-2
-                      * d 是父节点右节点，兄弟节点是红色
-                      * p节点右旋，p节点变为红色，s节点变为黑色
-                      * 变换后 d的兄弟节点肯定为黑色，变成情况2-4或情况2-6
-                      */
-                     RIGHT_ROTATE(T, p);
-                     p.setColor(NodeColor.Red);
-                     s.setColor(NodeColor.Black);
-                     // d的兄弟节点变为之前兄弟节点的右节点，一定为黑色
-                     s = s.getRight();
-                  }
-                  if (s.getRight().getColor() == NodeColor.Red) {
-                     /**
-                      * 情况2-4
-                      * d 是父节点右节点， 兄弟节点为黑色，近侄子节点为红色，?远侄子节点为黑色
-                      * s 节点左旋，s和sr换色
-                      * 变色前 s 一定为黑色，sr一定为红色
-                      * 变色后 s 一定为红色，sr一定为黑色
-                      * d的兄弟节点变为之前兄弟节点的右节点
-                      * 变成情况2-6继续处理
-                      */
-                     RedBlackTreeNode sr = s.getRight();
-                     s.setColor(NodeColor.Red);
-                     s.getRight().setColor(NodeColor.Black);
-                     LEFT_ROTATE(T, s);
-                     s = sr;
-                  }
-                  if (s.getLeft().getColor() == NodeColor.Red) {
-                     /**
-                      * 情况2-6
-                      * 兄弟节点为黑色，且远侄子为红色
-                      * 即兄弟节点左节点为红色
-                      * s设为p颜色，p设为黑色，sl设为黑色，删除节点d
-                      */
-                     LEFT_ROTATE(T, p);
-                     s.setColor(p.getColor());
-                     p.setColor(NodeColor.Black);
-                     s.getLeft().setColor(NodeColor.Black);
-                     // 删除d，完成删除操作
-                     d.getParent().setRight(nil);
-                     return;
-                  }
-
-                  /**
-                   * 情况2-8 兄弟节点和兄弟节点子节点均为黑色
-                   */
-                  if (p.getColor() == NodeColor.Red) {
-                     /**
-                      * 父节点为红色
-                      * 将父节点变为黑色
-                      * 兄弟节点变为红色
-                      * 删除节点 结束
-                      */
-                     p.setColor(NodeColor.Black);
-                     s.setColor(NodeColor.Red);
-                     p.setRight(nil);
-                     return;
-                  } else {
-                     /**
-                      * 父节点为黑色
-                      * s类似新插入的节点
-                      * 进行变色插入变色调整 ？？？？？？
-                      * 删除 d节点
-                      */
-                     p.setRight(nil);
-                     s.setColor(NodeColor.Red);
-                     RB_DELETE_FIXUP(T, p);
-                     return;
-                  }
-               }
-            }
-         }
-      }
-      /**
-       * 情形3：d节点只有一个左节点或者一个右节点
-       * 此时d节点一定是黑色，左节点或者右节点为空，其他情况不会出现
-       * 左子树或者右子树根节点为红色
-       * 这种情况下的处理方式就是
-       * 用存在的左子树或者右子树替换d节点
-       */
-      if (IsNil(d.getLeft()) == false) {
-         // 左子树存在
-         RedBlackTreeNode dl = d.getLeft();
-         dl.setColor(NodeColor.Black);
-         RB_TRANSPLANT(T, d, dl);
-      } else {
-         // 右子树存在
-         RedBlackTreeNode dr = d.getRight();
-         dr.setColor(NodeColor.Black);
-         RB_TRANSPLANT(T, d, dr);
-      }
-   }
-  ```
-
-  情况2-7-2的情况，进行树平衡代码实现如下：
-
-  ```java
-    // RedBlackTree.java
    /**
-    * 删除节点调整
+    * 删除节点
     * @param T
-    * @param x
+    * @param z
     */
-   public void RB_DELETE_FIXUP(RedBlackTree T, RedBlackTreeNode x){
-      //临时结点
-      RedBlackTreeNode w = null;
-      //非根结点且为黑色
-      while( x != T.getRoot() && x.getColor() == NodeColor.Black ){
-         //x为父结点左孩子
-         if( x == x.getParent().getLeft() ){
-            //w为兄弟结点
-            w = x.getParent().getRight();
-            //case1：w兄弟结点为红色， w一定有两个子节点
-            if( w.getColor() == NodeColor.Red ){
-               //w设为黑色
-               w.setColor(  NodeColor.Black );
-               //被删结点的父结点设为黑色
-               x.getParent().setColor( NodeColor.Red );
-               //对x的父结点左旋
-               LEFT_ROTATE(T, x.getParent());
-               //更新x的兄弟结点
-               w = x.getParent().getRight();
-            }
-            //case2：w兄弟结点和两个孩子结点都为黑
-            if( w.getLeft().getColor() == NodeColor.Black && w.getRight().getColor() == NodeColor.Black ){
-               //w设为黑色
-               w.setColor(NodeColor.Red);
-               //重设x为x的父结点
-               x = x.getParent();
-            }
-            //case3：w兄弟结点为黑，w的左孩子为红，右孩子为黑
-            else if( w.getRight().getColor() == NodeColor.Black ){
-               //w的左孩子设为黑
-               w.getLeft().setColor(NodeColor.Black);
-               //w设为红
-               w.setColor(NodeColor.Red);
-               //右旋
-               RIGHT_ROTATE(T, w);
-               //更新w
-               w = x.getParent().getRight();
-            }
-            //case4：w兄弟结点为黑，w的右孩子为红
-            w.setColor(x.getParent().getColor());
-            x.getParent().setColor(NodeColor.Black);
-            w.getRight().setColor(NodeColor.Black);
-            LEFT_ROTATE(T, x.getParent());
-            x = T.getRoot();
+   public void RB_DELETE(RedBlackTree T, RedBlackTreeNode z) {
+      RedBlackTreeNode y = z;
+      RedBlackTreeNode x = RedBlackTree.nil;
+      String yOriginColor = y.getColor();
+      if (z.getLeft() == RedBlackTree.nil) {
+         // z没有左节点
+         x = z.getRight();
+         RB_TRANSPLANT(T, z, z.getRight());
+      } else if (z.getRight() == RedBlackTree.nil) {
+         // z没有右节点
+         x = z.getLeft();
+         RB_TRANSPLANT(T, z, z.getLeft());
+      } else {
+         y = TREE_MINIMUM(z.getRight());
+         yOriginColor = y.getColor();
+         x = y.getRight();
+         if (y.getParent() == z) {
+            // y就是 z 的右节点
+            x.setParent(y);
+         } else {
+            // y 是 z 右子树的最小节点
+            // 用 y 的值替换 z位置的值
+            RB_TRANSPLANT(T, y, y.getRight());
+            y.setRight(z.getRight());
+            y.getRight().setParent(y);
          }
-         //x为父结点右孩子
-         else{
-            w = x.getParent().getLeft();
-            if( w.getColor() == NodeColor.Red ){
-               w.setColor(  NodeColor.Black );
-               x.getParent().setColor( NodeColor.Red );
-               RIGHT_ROTATE(T, x.getParent());
-               w = x.getParent().getLeft();
-            }
-            if( w.getRight().getColor() == NodeColor.Black && w.getLeft().getColor() == NodeColor.Black ){
-               w.setColor(NodeColor.Red);
-               x = x.getParent();
-            }
-            else if( w.getLeft().getColor() == NodeColor.Black ){
-               w.getRight().setColor(NodeColor.Black);
-               w.setColor(NodeColor.Red);
-               LEFT_ROTATE(T, w);
-               w = x.getParent().getLeft();
-            }
-            w.setColor(x.getParent().getColor());
-            x.getParent().setColor(NodeColor.Black);
-            w.getLeft().setColor(NodeColor.Black);
-            RIGHT_ROTATE(T, x.getParent());
-            x = T.getRoot();
+         RB_TRANSPLANT(T, z, y);
+         y.setLeft(z.getLeft());
+         y.getLeft().setParent(y);
+         y.setColor(z.getColor());
+         if (yOriginColor == NodeColor.Black) {
+            // y 是红色，直接删除 y
+            // 否则需要重新平衡树
+            RB_DELETE_FIXUP(T, x);
          }
       }
-      x.setColor(NodeColor.Black);
    }
-
   ```
+
+  重新平衡树有多种情形 ，下面一一介绍：
+
+  情形1: d节点兄弟节点w为红色，此时s一定有两个子节点，如下图；
+  ![情况1：兄弟节点s为红色](./images/red-black-tree/red-black-tree-11.png)
+
+   操作：改变w和d的父节点p的颜色，改变后s为黑色，p为红色，p节点左旋一次，d节点的兄弟节点变为w节点的右子节点，一定为黑色，变成情形2、情形3或者情形4继续处理；
+
+  情形2： s和两个子节点均为黑色，如下图：
+
+  ![情况2：父节点为黑色黑色，s和两个子节点均为黑色](./images/red-black-tree/red-black-tree-15.png)
+
+  操作：将s变为红色，此时，x的父节点两个子树的黑色都减少一层（相对于整个树的其他路径），为了补偿这层减少的黑色，将d置为d的父节点，继续遍历，直到遇到第一个红色节点，变为黑色，此时，减少的一层黑色补充回来，达到平衡状态（此时也不关心p节点的颜色，只要在上层找到一个红色节点，变为黑色，整个树就可以达到平衡状态）；
+
+  情形3：d节点兄弟节点s是黑色，s的左孩子是红色，右孩子是黑色，如下图：
+  ![情况2：兄弟节点s为黑色，近侄子为红色](./images/red-black-tree/red-black-tree-12.png)
+
+
+   操作：将s和s的左节点颜色互换，s进行右旋，然后d的兄弟节点变为之前s的左节点为黑色，兄弟节点的右节点变为黑色，变成情形4继续处理；
+
+  情形4：d节点的兄弟节点s是黑色，s的右节点是红色，如下图：
+  ![情况2-5：兄弟节点s为黑色，远侄子为红色](./images/red-black-tree/red-black-tree-13.png)
+
+  操作：兄弟节点s设为d节点父节点的颜色，父节点p设为黑色，s节点的右节点设为黑色，p节点右旋，达到平衡状态；（这时，不论p节点的颜色是红还是黑，包含d路径的减少的黑色由右旋并设为黑色的p节点补充，d兄弟节点s一侧的黑色由s节点的右孩子补充，s节点变为之前的父节点，p子树达到和之前相同状态，平衡结束）;
 
 
 
 ### 参考资料
+
+- [java实现源码](https://github.com/MuffinYu/algorithm-implementation-java)
 
 - [【算法】红黑树插入数据的情况与实现（三）](https://blog.csdn.net/lsr40/article/details/85266069)
 
 - [csxiaoyao 博客 —— 红黑树算法的Java实现 【原创】](https://www.csxiaoyao.cn/blog/index.php/2016/10/23/java/)
 
 - [红黑树之删除节点](https://www.cnblogs.com/qingergege/p/7351659.html)
+
+- 算法导论-第13章红黑树 删除
