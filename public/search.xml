@@ -1,0 +1,772 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>算法基础（1）——红黑树</title>
+    <url>/2019/10/08/%E7%AE%97%E6%B3%95%E5%9F%BA%E7%A1%80%EF%BC%881%EF%BC%89%E2%80%94%E2%80%94%E7%BA%A2%E9%BB%91%E6%A0%91/</url>
+    <content><![CDATA[<p>红黑树(Red-Black Tree，简称R-B Tree)，它一种特殊的二叉查找树。</p>
+<a id="more"></a>
+
+<h3 id="一、红黑树介绍"><a href="#一、红黑树介绍" class="headerlink" title="一、红黑树介绍"></a>一、红黑树介绍</h3><h4 id="1-基本定义"><a href="#1-基本定义" class="headerlink" title="1. 基本定义"></a>1. 基本定义</h4><p>红黑树(Red-Black Tree，简称R-B Tree)，它一种特殊的二叉查找树。</p>
+<p>红黑树是特殊的二叉查找树，意味着它满足二叉查找树的特征：任意一个节点所包含的键值，大于等于左孩子的键值，小于等于右孩子的键值。</p>
+<p>红黑树区别于普通话二叉树在于每个节点上都有存储位表示节点的颜色，颜色是红(Red)或黑(Black)。</p>
+<p>同时节点颜色有以下的特性:<br>(1) 每个节点或者是黑色，或者是红色。<br>(2) 根节点是黑色。<br>(3) 每个叶子节点是黑色。 [注意：这里叶子节点，是指为空的叶子节点！]<br>(4) 如果一个节点是红色的，则它的子节点必须是黑色的。[一条线上不会出现两个及以上连续的红色节点，可能出现连续黑色节点]<br>(5) 从一个节点到该节点的子孙节点的所有路径上包含相同数目的黑节点。</p>
+<p>在二叉树和上述五个特性的限制下，从根节点到叶子节点的最长路径不多于最短路径的两倍。二叉树在极端情况下会退化成链表，此时查询的复杂度为O(n)，就没有了二叉树的特性减少时间复杂度的特点，如下图右侧，但红黑树会保证每个分枝的长度不会相差太多，确保时间性能在O(logN)左右。</p>
+<p><img src="./red-black-tree-1.png" alt="红黑树和二叉树"></p>
+<h4 id="2-引理"><a href="#2-引理" class="headerlink" title="2. 引理"></a>2. 引理</h4><ul>
+<li>2.1 一个有n个节点的红黑树高度至多为2lg(n+1)<!-- -  -->
+
+</li>
+</ul>
+<h3 id="二、红黑树构建"><a href="#二、红黑树构建" class="headerlink" title="二、红黑树构建"></a>二、红黑树构建</h3><p>红黑树的构建关键在于，添加和节点后，需要经过变色和旋转调整，以满足红黑树的五点要求，但不是每次添加节点都需要变色和旋转，需要判断不同情形，下面先介绍红黑树添加节点的情况处理：</p>
+<p>为方便上下文结合代码理解，这里先给出基本的节点和树的代码：</p>
+<ul>
+<li>节点颜色</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// NodeColor.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NodeColor</span> </span>&#123;</span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">static</span> String Red = <span class="string">"red"</span>;</span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">static</span> String Black = <span class="string">"black"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>节点（使用lombok注解，省去了构造方法和getter，setter方法）</li>
+</ul>
+<p><strong>注意：</strong>空节点的默认颜色为黑色，新添加节点的默认颜色为红色</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// RedBlackTreeNode.java</span></span><br><span class="line"><span class="keyword">import</span> lombok.*;</span><br><span class="line"></span><br><span class="line"><span class="meta">@AllArgsConstructor</span></span><br><span class="line"><span class="meta">@NoArgsConstructor</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedBlackTreeNode</span> </span>&#123;</span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> String color = NodeColor.Black;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">int</span> key = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> RedBlackTreeNode left;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> RedBlackTreeNode right;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> RedBlackTreeNode parent;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// RedBlackTree.java</span></span><br><span class="line"><span class="keyword">import</span> lombok.Getter;</span><br><span class="line"><span class="keyword">import</span> lombok.Setter;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedBlackTree</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 空节点</span></span><br><span class="line"><span class="comment">    * 默认颜色为黑色</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">static</span> RedBlackTreeNode nil = <span class="keyword">new</span> RedBlackTreeNode();</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 记录根节点</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> RedBlackTreeNode root = <span class="keyword">new</span> RedBlackTreeNode();</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 构造空树</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="title">RedBlackTree</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      root = nil;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 生成一个新节点，默认颜色为红色</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> key</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> RedBlackTreeNode <span class="title">RB_NODE</span><span class="params">(<span class="keyword">int</span> key)</span> </span>&#123;</span><br><span class="line">      RedBlackTreeNode node = <span class="keyword">new</span> RedBlackTreeNode(NodeColor.Red, key, nil, nil, nil);</span><br><span class="line">      <span class="keyword">return</span> node;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 判断节点是否为空</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> node</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">IsNil</span><span class="params">(RedBlackTreeNode node)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (node == nil) &#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">      &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="（1）、添加节点"><a href="#（1）、添加节点" class="headerlink" title="（1）、添加节点"></a>（1）、添加节点</h4><ol>
+<li><p>首先找到节点的添加位置，插入节点</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 插入节点</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> T</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> z</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">RB_INSERT</span><span class="params">(RedBlackTree T, RedBlackTreeNode z)</span> </span>&#123;</span><br><span class="line">   <span class="comment">// 临时变量节点y,存储临时节点，默认为nil</span></span><br><span class="line">   RedBlackTreeNode y = RedBlackTree.nil;</span><br><span class="line">   <span class="comment">// 获取根节点，从根节点开始遍历查询</span></span><br><span class="line">   RedBlackTreeNode x = T.getRoot();</span><br><span class="line">   <span class="comment">// 循环二分查找合适的插入点</span></span><br><span class="line">   <span class="keyword">while</span> (IsNil(x) == <span class="keyword">false</span>) &#123;</span><br><span class="line">      <span class="comment">// 保存当前节点，作为结果的根节点</span></span><br><span class="line">      y = x;</span><br><span class="line">      <span class="keyword">if</span> (z.getKey() &lt; x.getKey())&#123;</span><br><span class="line">         <span class="comment">// 添加节点值小于节点的值，查找左子树</span></span><br><span class="line">         x = x.getLeft();</span><br><span class="line">      &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="comment">// 添加节点值大于节点的值，查找右子树</span></span><br><span class="line">         x = x.getRight();</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// 临时节点y设置为插入点的父节点</span></span><br><span class="line">   z.setParent(y);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> (IsNil(y) == <span class="keyword">true</span>) &#123;</span><br><span class="line">      <span class="comment">// 空树时设置z为根节点</span></span><br><span class="line">      T.setRoot((z));</span><br><span class="line">   &#125;<span class="keyword">else</span> <span class="keyword">if</span> (z.getKey() &lt; y.getKey())&#123;</span><br><span class="line">      <span class="comment">// 新节点为左子节点</span></span><br><span class="line">      y.setLeft(z);</span><br><span class="line">   &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// 新节点为右子节点</span></span><br><span class="line">      y.setRight(z);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// 将插入节点的左右子树设为nil，颜色为红色，已经在构造时设置过，可以省略</span></span><br><span class="line">   z.setLeft(RedBlackTree.nil);</span><br><span class="line">   z.setRight(RedBlackTree.nil);</span><br><span class="line">   z.setColor(NodeColor.Red);</span><br><span class="line">   <span class="comment">// 插入调整</span></span><br><span class="line">   RB_INSERT_FIXUP(T, z);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>根据不同情况，进行变色和旋转</p>
+</li>
+<li><p>1 插入情况总结</p>
+</li>
+</ol>
+<ul>
+<li><p><strong>情况1：</strong>如果是根节点，直接插入就完事了（插入还是默认为红色，然后在代码的最后把根目录设置为黑色）</p>
+</li>
+<li><p><strong>情况2：</strong>插入节点的父亲为黑色，也一样，插入就完事了，不用做任何的改动</p>
+</li>
+<li><p><strong>情况3：</strong>插入节点的父亲为红色，叔叔节点（插入节点的爷爷的另一个子节点）的颜色也是红色</p>
+</li>
+<li><p><strong>情况4：</strong>插入节点的父亲为红色，叔叔节点节点为黑色</p>
+<p>情况4最麻烦，因为需要再做一次判断，</p>
+</li>
+</ul>
+<p>  <strong>（爷爷节点用G表示，父：F，叔叔：U，插入节点：M）</strong></p>
+<p>  注意，下面四张图U节点都是Nil节点（也就是一个不存在的节点，根据红黑树的特点，这个节点的颜色也是黑色），下图中画出来是为了便于理解。</p>
+<p><img src="./red-black-tree-2.png" alt="F是左节点，M是右节点"><br><img src="./red-black-tree-3.png" alt="F是左节点，M是左节点"><br><img src="./red-black-tree-4.png" alt="F是右节点，M是左节点"><br><img src="./red-black-tree-5.png" alt="F是右节点，M是右节点"></p>
+<p>四张图从左到右，从上到下：</p>
+<p>图1：父节点是爷爷节点左节点，插入节点是父节点的右节点；<br>图2：父节点是爷爷节点左节点，插入节点是父节点的左节点；<br>图3：父节点是爷爷节点右节点，插入节点是父节点的左节点；<br>图4：父节点是爷爷节点右节点，插入节点是父节点的右节点；</p>
+<p>四种情况总结来说，主要是<strong>爷爷节点、爸爸节点和插入节点是否是三点一线</strong>，如果不是三点一线，如图1和图3，就属于情况4的阶段1；如果是三点一线，如图2和图4，就属于情况4的阶段2。</p>
+<p>阶段1和阶段2有什么联系吗？阶段1的处理方式，就是经过旋转变成阶段2后，再做阶段2的旋转处理。</p>
+<p>2.2 插入情况处理</p>
+<p>情况1：表示插入的根节点，直接把新节点的红色变成黑色就可以了。</p>
+<p>情况2：父节点是黑色，直接插入，不做任何旋转和变色处理。</p>
+<p>情况3：父节点是红色，叔叔节点也是红色，直接把叔叔节点和父节点的颜色变成黑色，爷爷节点变成红色，并由爷爷节点继续上溯判断，爷爷节点的父节点颜色，做类似的处理。（因为太爷爷节点可能为红色，将爷爷节点变成红色，可能会和特性4冲突，必须向上继续判断）。</p>
+<p>情况4：父节点是红色，叔叔节点是黑色，这种情况较为复杂，先判断处于那个阶段。</p>
+<ul>
+<li>如果符合阶段1，图1和图3情形，图1就对F节点做左旋，图3就对F节点右旋，如下图，经过旋转，变成阶段2，即插入节点、父节点和爷爷节三点一线。</li>
+</ul>
+<p><img src="./red-black-tree-6.png" alt="F是左节点，M是右节点，F左旋"><br><img src="./red-black-tree-7.png" alt="F是右节点，M是左节点，F右旋"></p>
+<ul>
+<li>如果符合阶段2，图2和图4情形，图2就对G节点右旋，然后将G变为红色，如下图：</li>
+</ul>
+<p><img src="./red-black-tree-8.png" alt="F是左节点，M是左节点，G右旋，F黑色，G红色"><br><img src="./red-black-tree-9.png" alt="F是右节点，M是右节点，G左旋，F黑色，G红色"></p>
+<ol start="3">
+<li><p>代码实现</p>
+<p>综合上述的不同场景，整体逻辑流程总结如下图：</p>
+</li>
+</ol>
+<p><img src="./red-black-tree-10.png" alt="逻辑流程图"></p>
+<p>  具体代码实现代码如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// RedBlackTree.java</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">RB_INSERT_FIXUP</span><span class="params">(RedBlackTree T, RedBlackTreeNode m)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 父节点是红色</span></span><br><span class="line">  <span class="keyword">while</span> (m != <span class="keyword">null</span> &amp;&amp; IsNil(m) == <span class="keyword">false</span> &amp;&amp;  m.getParent().getColor() == NodeColor.Red) &#123;</span><br><span class="line">      <span class="comment">// 父节点</span></span><br><span class="line">      RedBlackTreeNode f = m.getParent();</span><br><span class="line">      <span class="comment">// 爷爷节点</span></span><br><span class="line">      RedBlackTreeNode g = f.getParent();</span><br><span class="line">      <span class="comment">// 叔叔节点</span></span><br><span class="line">      RedBlackTreeNode u = RedBlackTree.nil;</span><br><span class="line">      <span class="keyword">if</span> (f == g.getLeft()) &#123;</span><br><span class="line">        <span class="comment">// 父节点是左节点</span></span><br><span class="line"></span><br><span class="line">        u = g.getRight();</span><br><span class="line">        <span class="keyword">if</span> (u.getColor() == NodeColor.Red)&#123;</span><br><span class="line">            <span class="comment">// 叔叔节点是红色</span></span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">            * 属于情况3，即叔叔节点也为红色，执行以下操作，并继续循环</span></span><br><span class="line"><span class="comment">            * f节点设为黑色</span></span><br><span class="line"><span class="comment">            * u节点设为黑色</span></span><br><span class="line"><span class="comment">            * g节点设为红色</span></span><br><span class="line"><span class="comment">            * 从g节点继续上溯循环判断，是否满足红黑树特性4</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">            f.setColor(NodeColor.Black);</span><br><span class="line">            u.setColor(NodeColor.Black);</span><br><span class="line">            g.setColor(NodeColor.Red);</span><br><span class="line">            m = g;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 叔叔节点是黑色</span></span><br><span class="line">            <span class="comment">// 判断插入节点是否是右节点</span></span><br><span class="line">            <span class="keyword">if</span> (m == f.getRight()) &#123;</span><br><span class="line">              <span class="comment">// 父节点是左节点，插入节点是右节点，叔叔节点是黑色</span></span><br><span class="line">              <span class="comment">/**</span></span><br><span class="line"><span class="comment">                * 图1类型，属于情况4，插入节点、父节点和祖父节点三点不一线，属于阶段1，做以下操作：</span></span><br><span class="line"><span class="comment">                * f节点左旋</span></span><br><span class="line"><span class="comment">                * 变成图2类型，情况4的阶段2，继续操作</span></span><br><span class="line"><span class="comment">                */</span></span><br><span class="line">              RedBlackTreeNode tmp = m;</span><br><span class="line">              m = f;</span><br><span class="line">              f = tmp;</span><br><span class="line">              LEFT_ROTATE(T, m);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">            * 图2类型，情况4的阶段2，执行以下操作：</span></span><br><span class="line"><span class="comment">            * 父节点颜色设为黑色</span></span><br><span class="line"><span class="comment">            * 祖父节点颜色设为红色</span></span><br><span class="line"><span class="comment">            * 对祖父节点右旋</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">            f.setColor(NodeColor.Black);</span><br><span class="line">            g.setColor(NodeColor.Red);</span><br><span class="line">            RIGHT_ROTATE(T, g);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 父节点是右节点</span></span><br><span class="line">        u = g.getLeft();</span><br><span class="line">        <span class="keyword">if</span> (u.getColor() == NodeColor.Red) &#123;</span><br><span class="line">            <span class="comment">// 叔叔节点是红色</span></span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">            * 属于情况3，即叔叔节点也为红色，执行以下操作，并继续循环</span></span><br><span class="line"><span class="comment">            * f节点设为黑色</span></span><br><span class="line"><span class="comment">            * u节点设为黑色</span></span><br><span class="line"><span class="comment">            * g节点设为红色</span></span><br><span class="line"><span class="comment">            * 从g节点继续上溯循环判断，是否满足红黑树特性4</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">            f.setColor(NodeColor.Black);</span><br><span class="line">            u.setColor(NodeColor.Black);</span><br><span class="line">            g.setColor(NodeColor.Red);</span><br><span class="line">            m = g;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 叔叔节点是黑色</span></span><br><span class="line">            <span class="comment">// 判断插入节点是否是右节点</span></span><br><span class="line">            <span class="keyword">if</span> (m == f.getLeft()) &#123;</span><br><span class="line">              <span class="comment">// 父节点是右节点，插入节点是左节点，叔叔节点是黑色</span></span><br><span class="line">              <span class="comment">/**</span></span><br><span class="line"><span class="comment">                * 图3类型，属于情况4，插入节点、父节点和祖父节点三点不一线，属于阶段1，做以下操作：</span></span><br><span class="line"><span class="comment">                * f节点右旋</span></span><br><span class="line"><span class="comment">                * 变成图4类型，情况4的阶段2，继续操作</span></span><br><span class="line"><span class="comment">                */</span></span><br><span class="line">              RedBlackTreeNode tmp = m;</span><br><span class="line">              m = f;</span><br><span class="line">              f = tmp;</span><br><span class="line">              RIGHT_ROTATE(T, m);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">            * 图4类型，情况4的阶段2，执行以下操作：</span></span><br><span class="line"><span class="comment">            * 父节点颜色设为黑色</span></span><br><span class="line"><span class="comment">            * 祖父节点颜色设为红色</span></span><br><span class="line"><span class="comment">            * 对祖父节点左旋</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line"></span><br><span class="line">            f.setColor(NodeColor.Black);</span><br><span class="line">            g.setColor(NodeColor.Red);</span><br><span class="line">            LEFT_ROTATE(T, g);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 根节点设为黑色</span></span><br><span class="line">  T.getRoot().setColor(NodeColor.Black);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">    *  左旋示意图</span></span><br><span class="line"><span class="comment">    * 对节点x进行左旋：</span></span><br><span class="line"><span class="comment">    *      px                              px</span></span><br><span class="line"><span class="comment">    *     /                               /</span></span><br><span class="line"><span class="comment">    *    x                               y</span></span><br><span class="line"><span class="comment">    *   /  \       --(左旋)--            / \</span></span><br><span class="line"><span class="comment">    *  lx   y                          x  ry</span></span><br><span class="line"><span class="comment">    *     /   \                       /  \</span></span><br><span class="line"><span class="comment">    *    ly   ry                     lx  ly</span></span><br><span class="line"><span class="comment">    *</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">LEFT_ROTATE</span><span class="params">(RedBlackTree T, RedBlackTreeNode x)</span></span>&#123;</span><br><span class="line">      <span class="comment">// 定义y节点</span></span><br><span class="line">      RedBlackTreeNode y = x.getRight();</span><br><span class="line">      <span class="comment">// y 左节点 设为 x右节点</span></span><br><span class="line">      x.setRight((y.getLeft()));</span><br><span class="line">      <span class="comment">// x 设为 y左节点父节点</span></span><br><span class="line">      y.getLeft().setParent(x);</span><br><span class="line">      <span class="comment">// x父节点 设为y父节点</span></span><br><span class="line">      y.setParent(x.getParent());</span><br><span class="line">      <span class="comment">// y 设为x父节点左/右节点或者根节点</span></span><br><span class="line">      <span class="keyword">if</span> (IsNil(x.getParent()) == <span class="keyword">true</span>) &#123;</span><br><span class="line">         <span class="comment">// x为根节点， y设为根节点</span></span><br><span class="line">         T.setRoot(y);</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (x.getParent().getLeft() == x) &#123;</span><br><span class="line">         <span class="comment">// x为左节点，y设为左节点</span></span><br><span class="line">         x.getParent().setLeft(y);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="comment">// x为右节点，y设为右节点</span></span><br><span class="line">         x.getParent().setRight(y);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// x 设为 y左节点</span></span><br><span class="line">      y.setLeft(x);</span><br><span class="line">      <span class="comment">// y 设为x父节点</span></span><br><span class="line">      x.setParent(y);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 右旋示意图</span></span><br><span class="line"><span class="comment">    * 对节点x进行右旋：</span></span><br><span class="line"><span class="comment">    *            px                               px</span></span><br><span class="line"><span class="comment">    *           /                                /</span></span><br><span class="line"><span class="comment">    *          x                                y</span></span><br><span class="line"><span class="comment">    *         /  \      --(右旋)--             /  \</span></span><br><span class="line"><span class="comment">    *        y   rx                          ly   x</span></span><br><span class="line"><span class="comment">    *       / \                                  / \</span></span><br><span class="line"><span class="comment">    *      ly  ry                               ry  rx</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">RIGHT_ROTATE</span><span class="params">(RedBlackTree T, RedBlackTreeNode x)</span></span>&#123;</span><br><span class="line">      <span class="comment">// 左节点</span></span><br><span class="line">      RedBlackTreeNode y = x.getLeft();</span><br><span class="line">      <span class="comment">// y的右节点 设为 x左节点</span></span><br><span class="line">      x.setLeft(y.getRight());</span><br><span class="line">      y.getRight().setParent(x);</span><br><span class="line">      <span class="comment">// x节点父节点设为 y父节点</span></span><br><span class="line">      y.setParent(x.getParent());</span><br><span class="line">      <span class="keyword">if</span> (IsNil(y.getParent()) == <span class="keyword">true</span>)&#123;</span><br><span class="line">         T.setRoot(y);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">else</span> <span class="keyword">if</span> (x.getParent().getRight() == x) &#123;</span><br><span class="line">         x.getParent().setRight(y);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">         x.getParent().setLeft(y);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// x设为y右节点</span></span><br><span class="line">      y.setRight(x);</span><br><span class="line">      <span class="comment">// y设为x父节点</span></span><br><span class="line">      x.setParent(y);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="（2）、删除节点"><a href="#（2）、删除节点" class="headerlink" title="（2）、删除节点"></a>（2）、删除节点</h4><p>  删除节点的情况略复杂于添加节点，和添加节点类似，分两步进行，首先删除节点，然后对删除后结果进行平衡。</p>
+<ol>
+<li><p>删除节点</p>
+<p>删除节点可以分几种情况加以处理：</p>
+</li>
+</ol>
+<p>  <strong>情况1：</strong>d节点两个子节点都有；<br>  <strong>情况2：</strong>d节点一个子节点也没有；<br>  <strong>情况3：</strong>d节点有一个子节点；</p>
+<p>  情况1下，先找到d节点的后继节点，即d右子树的最小节点，将后继节点的值替换到删除节点位置，颜色不需要变化，然后将删除d节点的情况变为删除后继节点的情况，即将后继节点赋值给d，因为后继节点肯定只有右子树，符合情况2下的一种情况，下面再详细介绍；</p>
+<p>  查找后继节点的代码实现：</p>
+  <figure class="highlight java"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"> <span class="comment">// RedBlackTree.java</span></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 查找 x 左子树最小的节点</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> x</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> RedBlackTreeNode <span class="title">TREE_MINIMUM</span><span class="params">(RedBlackTreeNode x)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">while</span> (IsNil(x.getLeft()) == <span class="keyword">false</span>) &#123;</span><br><span class="line">      x = x.getLeft();</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>   删除节点代码实现：</p>
+  <figure class="highlight java"><table><tr><td class="code"><pre><span class="line"> <span class="comment">// RedBlackTree.java</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 删除节点</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> T</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> z</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 删除节点</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> T</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> z</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">RB_DELETE</span><span class="params">(RedBlackTree T, RedBlackTreeNode z)</span> </span>&#123;</span><br><span class="line">   RedBlackTreeNode y = z;</span><br><span class="line">   RedBlackTreeNode x = RedBlackTree.nil;</span><br><span class="line">   String yOriginColor = y.getColor();</span><br><span class="line">   <span class="keyword">if</span> (z.getLeft() == RedBlackTree.nil) &#123;</span><br><span class="line">      <span class="comment">// z没有左节点</span></span><br><span class="line">      x = z.getRight();</span><br><span class="line">      RB_TRANSPLANT(T, z, z.getRight());</span><br><span class="line">   &#125; <span class="keyword">else</span> <span class="keyword">if</span> (z.getRight() == RedBlackTree.nil) &#123;</span><br><span class="line">      <span class="comment">// z没有右节点</span></span><br><span class="line">      x = z.getLeft();</span><br><span class="line">      RB_TRANSPLANT(T, z, z.getLeft());</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      y = TREE_MINIMUM(z.getRight());</span><br><span class="line">      yOriginColor = y.getColor();</span><br><span class="line">      x = y.getRight();</span><br><span class="line">      <span class="keyword">if</span> (y.getParent() == z) &#123;</span><br><span class="line">         <span class="comment">// y就是 z 的右节点</span></span><br><span class="line">         x.setParent(y);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="comment">// y 是 z 右子树的最小节点</span></span><br><span class="line">         <span class="comment">// 用 y 的值替换 z位置的值</span></span><br><span class="line">         RB_TRANSPLANT(T, y, y.getRight());</span><br><span class="line">         y.setRight(z.getRight());</span><br><span class="line">         y.getRight().setParent(y);</span><br><span class="line">      &#125;</span><br><span class="line">      RB_TRANSPLANT(T, z, y);</span><br><span class="line">      y.setLeft(z.getLeft());</span><br><span class="line">      y.getLeft().setParent(y);</span><br><span class="line">      y.setColor(z.getColor());</span><br><span class="line">      <span class="keyword">if</span> (yOriginColor == NodeColor.Black) &#123;</span><br><span class="line">         <span class="comment">// y 是红色，直接删除 y</span></span><br><span class="line">         <span class="comment">// 否则需要重新平衡树</span></span><br><span class="line">         RB_DELETE_FIXUP(T, x);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>  重新平衡树有多种情形 ，下面一一介绍：</p>
+<p>  情形1: d节点兄弟节点s为红色，此时s一定有两个子节点，如下图；<br>  <img src="./red-black-tree-11.png" alt="情况1：兄弟节点s为红色"></p>
+<p>   操作：改变s和d的父节点p的颜色，改变后s为黑色，p为红色，p节点左旋一次，d节点的兄弟节点变为s节点的右子节点，一定为黑色，变成情形2、情形3或者情形4继续处理；</p>
+<p>  情形2： s和两个子节点均为黑色，如下图：</p>
+<p>  <img src="./red-black-tree-15.png" alt="情况2：s和两个子节点均为黑色"></p>
+<p>  操作：将s变为红色，此时，d的父节点两个子树的黑色都减少一层（相对于整个树的其他路径），为了补偿这层减少的黑色，将d置为d的父节点，继续遍历，直到遇到第一个红色节点，变为黑色，此时，减少的一层黑色补充回来，达到平衡状态（此时也不关心p节点的颜色，只要在上层找到一个红色节点，变为黑色，整个树就可以达到平衡状态）；</p>
+<p>  情形3：d节点兄弟节点s是黑色，s的左孩子是红色，右孩子是黑色，如下图：<br>  <img src="./red-black-tree-12.png" alt="情况2：兄弟节点s为黑色，近侄子为红色"></p>
+<p>   操作：将s和s的左节点颜色互换，s进行右旋，然后d的兄弟节点变为之前s的左节点为黑色，兄弟节点的右节点变为黑色，变成情形4继续处理；</p>
+<p>  情形4：d节点的兄弟节点s是黑色，s的右节点是红色，如下图：<br>  <img src="./red-black-tree-13.png" alt="情况2-5：兄弟节点s为黑色，远侄子为红色"></p>
+<p>  操作：兄弟节点s设为d节点父节点的颜色，父节点p设为黑色，s节点的右节点设为黑色，p节点右旋，达到平衡状态；（这时，不论p节点的颜色是红还是黑，包含d路径的减少的黑色由右旋并设为黑色的p节点补充，d兄弟节点s一侧的黑色由s节点的右孩子补充，s节点变为之前的父节点，p子树达到和之前相同状态，平衡结束）；</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><h4 id="1-插入节点总结"><a href="#1-插入节点总结" class="headerlink" title="1. 插入节点总结"></a>1. 插入节点总结</h4><ol>
+<li><p>如果是根节点，直接插入，修改颜色为黑色，完成；</p>
+</li>
+<li><p>如果父节点是黑色，直接插入，不需要调整，完成；</p>
+</li>
+<li><p>如果父节点是红色，判断叔叔节点颜色：</p>
+<ul>
+<li><p>3.1 叔叔节点也是红色，则将父节点和叔叔节点变为黑色，爷爷节点变为红色，由爷爷节点继续上溯进行平衡（祖爷爷节点可能为红色，爷爷变红后，会破坏平衡性，需要回溯判断）；</p>
+</li>
+<li><p>3.2 叔叔节点是黑色，也分为两种情况：</p>
+<ul>
+<li>3.2.1 新节点，父节点，祖父节点不在三点一线，父节点需要旋转，达到三点一线（3.2.2情形）；</li>
+<li>3.2.2 新节点，父节点，祖父节点在三点一线，祖父节点需要旋转（成为父节点的子节点，具体旋转方向看情况而定），父节点变为黑色，祖父节点变为红色，完成调整；</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h4 id="2-删除节点总结"><a href="#2-删除节点总结" class="headerlink" title="2. 删除节点总结"></a>2. 删除节点总结</h4><ol>
+<li><p>删除节点有左右节点，则寻找删除节点的后继节点（右子树的最小值），用后继节点的值替换删除节点的值，转而研究删除后继节点的删除问题（后继节点一定只有一个右子节点，或者没有子节点，变成情况2）；</p>
+</li>
+<li><p>只有一个节点或者没有子节点（没有子节点可认为左子节点是黑色），继续判断下列条件：</p>
+<ul>
+<li><p>2.1 若删除节点颜色是红色，用子节点替换该节点（直接删除节点），不用调整；</p>
+</li>
+<li><p>2.2 若删除节点是黑色，用其子节点替换删除节点的位置，继续判断：</p>
+<ul>
+<li><p>2.2.1 替换该节点的子节点是红色，该子节点变为黑色，完成调整；</p>
+</li>
+<li><p>2.2.2 替换该节点的子节点是黑色，继续下列判断：</p>
+<ul>
+<li><p>2.2.2.1 删除节点的兄弟节点是红色（此时必有两个非空子节点），父节点变为红色，兄弟节点变为黑色，父节点做一次旋转（旋转后兄弟节点成为父节点父节点，旋转方向看具体情况而定），删除节点的兄弟节点一定为黑色，继续判断；</p>
+</li>
+<li><p>2.2.2.2 删除节点的兄弟节点和其两个子节点都是黑色，兄弟节点变为红色，将d置为d的父节点，继续向上遍历（d的父节点的两边子树都减少一层黑色，需要向上找到一个红色节点变为黑色，找回减少的这层黑色）；</p>
+</li>
+<li><p>2.2.2.3 近侄子节点是红色，远侄子节点为黑色，兄弟节点和近侄子节点换色（兄弟节点变为红色，近侄子节点变为黑色），兄弟节点旋转（近侄子节点成为兄弟节点父节点），旋转后近侄子节点成为兄弟节点一定为黑色，远侄子节点为之前兄弟节点一定是红色，变成下面一种情况；</p>
+</li>
+<li><p>2.2.2.4 远侄子节点为红色，则兄弟节点设为删除节点父节点的颜色，父节点设为黑色，远侄子节点设为黑色，父节点旋转一次（兄弟节点成为父节点的父节点，旋转方向看情况），达到平衡（删除节点一侧减少的黑色节点由父节点补充，不论父节点的颜色如何）。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
+<li><p><a href="https://github.com/MuffinYu/algorithm-implementation-java" target="_blank" rel="noopener">java实现源码</a></p>
+</li>
+<li><p><a href="https://blog.csdn.net/lsr40/article/details/85266069" target="_blank" rel="noopener">【算法】红黑树插入数据的情况与实现（三）</a></p>
+</li>
+<li><p><a href="https://www.csxiaoyao.cn/blog/index.php/2016/10/23/java/" target="_blank" rel="noopener">csxiaoyao 博客 —— 红黑树算法的Java实现 【原创】</a></p>
+</li>
+<li><p><a href="https://www.cnblogs.com/qingergege/p/7351659.html" target="_blank" rel="noopener">红黑树之删除节点</a></p>
+</li>
+<li><p>算法导论-第13章红黑树 删除</p>
+</li>
+</ul>
+]]></content>
+  </entry>
+  <entry>
+    <title>MyBatis 缓存机制分析和缓存控制</title>
+    <url>/2019/09/11/MyBatis-%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90%E5%92%8C%E7%BC%93%E5%AD%98%E6%8E%A7%E5%88%B6/</url>
+    <content><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><blockquote>
+<p>MyBatis 是一款优秀的持久层框架，它支持定制化 SQL、存储过程以及高级映射。MyBatis 避免了几乎所有的 JDBC 代码和手动设置参数以及获取结果集。MyBatis 可以使用简单的 XML 或注解来配置和映射原生类型、接口和 Java 的 POJO（Plain Old Java Objects，普通老式 Java 对象）为数据库中的记录。<br>                                               </p><p align="right">– <a href="http://www.mybatis.org/mybatis-3/zh/index.html" target="_blank" rel="noopener">MyBatis官网</a></p><p></p>
+</blockquote>
+<p>  Spring 系列的框架搭配 MyBatis 进行项目开发也是一种比较主流的项目开发模式，因此去了解 MyBatis 底层的数据缓存机制、Mapper 映射、会话管理等机制，对项目优化非常重要。本文将简要介绍 MyBatis 的两个等级数据缓存，以及谈谈如何定制细粒度，符合项目实际需求的二级缓存方案。</p>
+<a id="more"></a>
+
+<h3 id="MyBatis-两个等级缓存"><a href="#MyBatis-两个等级缓存" class="headerlink" title="MyBatis 两个等级缓存"></a>MyBatis 两个等级缓存</h3><h4 id="1-MyBatis-工作流程简单介绍"><a href="#1-MyBatis-工作流程简单介绍" class="headerlink" title="1. MyBatis 工作流程简单介绍"></a>1. MyBatis 工作流程简单介绍</h4><p>  每个基于 MyBatis 的应用都是以一个 SqlSessionFactory 的实例为核心的。SqlSessionFactory 的实例可以通过 SqlSessionFactoryBuilder 获得。而 SqlSessionFactoryBuilder 则可以从 XML 配置文件或一个预先定制的 Configuration 的实例构建出 SqlSessionFactory 的实例。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* mybatis 配置文件, 主要包含一下配置信息：</span></span><br><span class="line"><span class="comment">  properties（属性）</span></span><br><span class="line"><span class="comment">  settings（设置）</span></span><br><span class="line"><span class="comment">  typeAliases（类型别名）</span></span><br><span class="line"><span class="comment">  typeHandlers（类型处理器）</span></span><br><span class="line"><span class="comment">  objectFactory（对象工厂）</span></span><br><span class="line"><span class="comment">  plugins（插件）</span></span><br><span class="line"><span class="comment">  environments（环境配置）</span></span><br><span class="line"><span class="comment">    environment（环境变量）</span></span><br><span class="line"><span class="comment">      transactionManager（事务管理器）</span></span><br><span class="line"><span class="comment">      dataSource（数据源）</span></span><br><span class="line"><span class="comment">  databaseIdProvider（数据库厂商标识）</span></span><br><span class="line"><span class="comment">  mappers（映射器）</span></span><br><span class="line"><span class="comment">  **/</span></span><br><span class="line">String resource = <span class="string">"org/mybatis/example/mybatis-config.xml"</span>;</span><br><span class="line"><span class="comment">// 读取配置文件</span></span><br><span class="line">InputStream inputStream = Resources.getResourceAsStream(resource);</span><br><span class="line"><span class="comment">// 解析配置文件，通过 SqlSessionFactoryBuilder 类的 build 方法构建出 SqlSessionFactory</span></span><br><span class="line">SqlSessionFactory sqlSessionFactory = <span class="keyword">new</span> SqlSessionFactoryBuilder().build(inputStream);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 从 SqlSessionFactory 中获取 SqlSession 会话</span></span><br><span class="line"><span class="comment">// SqlSession 完全包含了面向数据库执行 SQL 命令所需的所有方法。你可以通过 SqlSession 实例来直接执行已映射的 SQL 语句</span></span><br><span class="line"><span class="keyword">try</span> (SqlSession sqlSession = sqlSessionFactory.openSession()) &#123;</span><br><span class="line">  Blog blog = (Blog) sqlSession.selectOne(<span class="string">"org.mybatis.example.BlogMapper.selectBlog"</span>, <span class="number">101</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同时，上面代码需要定义，并在 mybatis-config.xml 中包含了对应的 mapper 文件：</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version="1.0" encoding="UTF-8" ?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE mapper</span></span><br><span class="line"><span class="meta">  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"</span></span><br><span class="line"><span class="meta">  "http://mybatis.org/dtd/mybatis-3-mapper.dtd"&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">mapper</span> <span class="attr">namespace</span>=<span class="string">"org.mybatis.example.BlogMapper"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">"selectBlog"</span> <span class="attr">resultType</span>=<span class="string">"Blog"</span>&gt;</span></span><br><span class="line">    select * from Blog where id = #&#123;id&#125;</span><br><span class="line">  <span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">mapper</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>从上面的简单的代码中，已经完成了 MyBatis 的加载配置、开启会话、执行sql语句操作，SqlSession 内部的映射对应 mapper 文件和语句解析，则是一个更大的话题，这里不继续深入研究。</p>
+<p><strong>注意：</strong><br><strong>1. SqlSessionFactory 是创建 SqlSession 的工厂，在应用生命周期内，创建后不应该被丢弃或者多次创建，也就是 SqlSessionFactory 的生命周期最好存在于整个应用的生命周期内。</strong><br><strong>2. 通常而言，每有一个请求，就开启一次 SqlSession，完成 Http 响应后，就关闭这次会话，也意味着这个 SqlSession 的生命周期结束。</strong></p>
+<h4 id="2-基于-SqlSession-的一级缓存"><a href="#2-基于-SqlSession-的一级缓存" class="headerlink" title="2. 基于 SqlSession 的一级缓存"></a>2. 基于 SqlSession 的一级缓存</h4><p>  上面提及到的 SqlSession 是一次数据库会话或者一次数据库事务的最小单位，在创建 SqlSession 的同时，会在其内部创建一个 Exector 执行器，Exector 内部的 PerpetualCache 中有一个 HashMap 对象，这就是一级缓存数据最终保存的位置，如下代码：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// DefaultSqlSessionFactory.java </span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> SqlSession <span class="title">openSession</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> openSessionFromDataSource(configuration.getDefaultExecutorType(), <span class="keyword">null</span>, <span class="keyword">false</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">private</span> SqlSession <span class="title">openSessionFromDataSource</span><span class="params">(ExecutorType execType, TransactionIsolationLevel level, <span class="keyword">boolean</span> autoCommit)</span> </span>&#123;</span><br><span class="line">    Transaction tx = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">final</span> Environment environment = configuration.getEnvironment();</span><br><span class="line">      <span class="keyword">final</span> TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);</span><br><span class="line">      tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);</span><br><span class="line">      <span class="keyword">final</span> Executor executor = configuration.newExecutor(tx, execType);</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> DefaultSqlSession(configuration, executor, autoCommit);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">      closeTransaction(tx); <span class="comment">// may have fetched a connection so lets call close()</span></span><br><span class="line">      <span class="keyword">throw</span> ExceptionFactory.wrapException(<span class="string">"Error opening session.  Cause: "</span> + e, e);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      ErrorContext.instance().reset();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// DefaultSqlSession.java</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">DefaultSqlSession</span><span class="params">(Configuration configuration, Executor executor, <span class="keyword">boolean</span> autoCommit)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.configuration = configuration;</span><br><span class="line">    <span class="keyword">this</span>.executor = executor;</span><br><span class="line">    <span class="keyword">this</span>.dirty = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">this</span>.autoCommit = autoCommit;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// BaseExecutor.java</span></span><br><span class="line">  <span class="function"><span class="keyword">protected</span> <span class="title">BaseExecutor</span><span class="params">(Configuration configuration, Transaction transaction)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.transaction = transaction;</span><br><span class="line">    <span class="keyword">this</span>.deferredLoads = <span class="keyword">new</span> ConcurrentLinkedQueue&lt;&gt;();</span><br><span class="line">    <span class="keyword">this</span>.localCache = <span class="keyword">new</span> PerpetualCache(<span class="string">"LocalCache"</span>);</span><br><span class="line">    <span class="keyword">this</span>.localOutputParameterCache = <span class="keyword">new</span> PerpetualCache(<span class="string">"LocalOutputParameterCache"</span>);</span><br><span class="line">    <span class="keyword">this</span>.closed = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">this</span>.configuration = configuration;</span><br><span class="line">    <span class="keyword">this</span>.wrapper = <span class="keyword">this</span>;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// PerpetualCache.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PerpetualCache</span> <span class="keyword">implements</span> <span class="title">Cache</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> String id;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> Map&lt;Object, Object&gt; cache = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">PerpetualCache</span><span class="params">(String id)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.id = id;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">getId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> id;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getSize</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> cache.size();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">putObject</span><span class="params">(Object key, Object value)</span> </span>&#123;</span><br><span class="line">    cache.put(key, value);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Object <span class="title">getObject</span><span class="params">(Object key)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> cache.get(key);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Object <span class="title">removeObject</span><span class="params">(Object key)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> cache.remove(key);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">clear</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    cache.clear();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">equals</span><span class="params">(Object o)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (getId() == <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> CacheException(<span class="string">"Cache instances require an ID."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span> == o) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!(o <span class="keyword">instanceof</span> Cache)) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Cache otherCache = (Cache) o;</span><br><span class="line">    <span class="keyword">return</span> getId().equals(otherCache.getId());</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (getId() == <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> CacheException(<span class="string">"Cache instances require an ID."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> getId().hashCode();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 SqlSession 执行查询任务时，根据statementId,params,rowBounds来构建一个key值，根据这个key值将结果缓存 Cache 中；下次再执行查询时，判断对应key值缓存中是否有数据，如果有，直接返回结果；如果没有，会去数据库中查询数据。</p>
+<p>这个缓存在 SqlSession 中执行了任何一个update操作(update()、delete()、insert()) 后都会清空数据。同时也可以手动的清空其中缓存的数据。</p>
+<p>一级缓存是MyBatis内部实现的一个特性，用户不能配置，默认情况下自动支持的缓存，用户没有定制它的权利。</p>
+<h4 id="3-应用级别的二级缓存"><a href="#3-应用级别的二级缓存" class="headerlink" title="3. 应用级别的二级缓存"></a>3. 应用级别的二级缓存</h4><p>一级缓存是 SqlSession实现的，随着 SqlSession 生命周期的结束，也将失效。而二级缓存则是 MyBatis 设计的，在整个生命周期内，都可用的数据缓存，前提是设置 “cacheEnabled=true”， 默认下是开启的。</p>
+<p>在 DefaultSqlSessionFactory 生成 SqlSession 的时候，如果 cacheEnabled 开启，会对Executor对象加上一个装饰者：CachingExecutor，这时SqlSession使用CachingExecutor对象来完成操作请求。CachingExecutor对于查询请求，会先判断该查询请求在Application级别的二级缓存中是否有缓存结果，如果有查询结果，则直接返回缓存结果；如果缓存中没有，再交给真正的Executor对象来完成查询操作，之后CachingExecutor会将真正Executor返回的查询结果放置到缓存中，然后在返回给用户。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Config.java</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Executor <span class="title">newExecutor</span><span class="params">(Transaction transaction, ExecutorType executorType)</span> </span>&#123;</span><br><span class="line">    executorType = executorType == <span class="keyword">null</span> ? defaultExecutorType : executorType;</span><br><span class="line">    executorType = executorType == <span class="keyword">null</span> ? ExecutorType.SIMPLE : executorType;</span><br><span class="line">    Executor executor;</span><br><span class="line">    <span class="keyword">if</span> (ExecutorType.BATCH == executorType) &#123;</span><br><span class="line">      executor = <span class="keyword">new</span> BatchExecutor(<span class="keyword">this</span>, transaction);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (ExecutorType.REUSE == executorType) &#123;</span><br><span class="line">      executor = <span class="keyword">new</span> ReuseExecutor(<span class="keyword">this</span>, transaction);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      executor = <span class="keyword">new</span> SimpleExecutor(<span class="keyword">this</span>, transaction);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (cacheEnabled) &#123;</span><br><span class="line">      executor = <span class="keyword">new</span> CachingExecutor(executor);</span><br><span class="line">    &#125;</span><br><span class="line">    executor = (Executor) interceptorChain.pluginAll(executor);</span><br><span class="line">    <span class="keyword">return</span> executor;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>二级缓存存在于整个应用的生命周期，但是其内部缓存的数据根据 mapper 的命名空间，进行了更细致的划分，默认一个 mapper 一个命名空间，但可以 通过 <strong><cache-ref namespace="mapper-namespace"></cache-ref></strong> 指定多个 mapper 公用一个命名空间。</p>
+<!-- 同时 MyBatis 可以对一条查询语句设置是否启用缓存， 使用**<select ... useCache="true">...</select>** -->
+<p>同时 MyBatis 可以对一条查询语句设置是否启用缓存， 使用&lt;select  useCache=”true”&gt;…&lt;/select&gt;</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>Java SE 基础之Map</title>
+    <url>/2019/08/27/Java-SE-%E5%9F%BA%E7%A1%80%E4%B9%8BMap/</url>
+    <content><![CDATA[<p>java中提供的Map的实现主要有HashMap、LinkedHashMap、WeakHashMap、TreeMap、ConcurrentHashMap、ConcurrentSkipListMap，另外还有两个比较古老的Map实现HashTable和Properties。</p>
+<a id="more"></a>
+
+<h3 id="一、HashMap-基础"><a href="#一、HashMap-基础" class="headerlink" title="一、HashMap 基础"></a>一、HashMap 基础</h3><p><img src="./HashMap.png" alt="HashMap-structure"></p>
+<p>HashMap采用key/value存储结构，每个key对应唯一的value，查询和修改的速度都很快，能达到O(1)的平均时间复杂度。它是非线程安全的，且不保证元素存储的顺序；</p>
+<p>HashMap实现了Cloneable，可以被克隆。</p>
+<p>HashMap实现了Serializable，可以被序列化。</p>
+<p>HashMap继承自AbstractMap，实现了Map接口，具有Map的所有功能。</p>
+<h3 id="二、LinkedHashMap-基础"><a href="#二、LinkedHashMap-基础" class="headerlink" title="二、LinkedHashMap 基础"></a>二、LinkedHashMap 基础</h3><p><img src="./LinkedHashMap.png" alt="LinkedHashMap-structure"></p>
+<p>LinkedHashMap内部维护了一个双向链表，能保证元素按插入的顺序访问，也能以访问顺序访问，可以用来实现LRU缓存策略。</p>
+<p>LinkedHashMap可以看成是 LinkedList + HashMap。</p>
+<p>LinkedHashMap继承HashMap，拥有HashMap的所有特性，并且额外增加的按一定顺序访问的特性。</p>
+<h4 id="LinkedHashMap实现LRU-Least-Recently-Used，最近最少使用-缓存淘汰策略"><a href="#LinkedHashMap实现LRU-Least-Recently-Used，最近最少使用-缓存淘汰策略" class="headerlink" title="LinkedHashMap实现LRU (Least Recently Used，最近最少使用)缓存淘汰策略"></a>LinkedHashMap实现LRU (Least Recently Used，最近最少使用)缓存淘汰策略</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> com.coolcoding.code;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.LinkedHashMap;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LRUTest</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 创建一个只有5个元素的缓存</span></span><br><span class="line">        LRU&lt;Integer, Integer&gt; lru = <span class="keyword">new</span> LRU&lt;&gt;(<span class="number">5</span>, <span class="number">0.75f</span>);</span><br><span class="line">        lru.put(<span class="number">1</span>, <span class="number">1</span>);</span><br><span class="line">        lru.put(<span class="number">2</span>, <span class="number">2</span>);</span><br><span class="line">        lru.put(<span class="number">3</span>, <span class="number">3</span>);</span><br><span class="line">        lru.put(<span class="number">4</span>, <span class="number">4</span>);</span><br><span class="line">        lru.put(<span class="number">5</span>, <span class="number">5</span>);</span><br><span class="line">        lru.put(<span class="number">6</span>, <span class="number">6</span>);</span><br><span class="line">        lru.put(<span class="number">7</span>, <span class="number">7</span>);</span><br><span class="line"></span><br><span class="line">        System.out.println(lru.get(<span class="number">4</span>));</span><br><span class="line"></span><br><span class="line">        lru.put(<span class="number">6</span>, <span class="number">666</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 输出: &#123;3=3, 5=5, 7=7, 4=4, 6=666&#125;</span></span><br><span class="line">        <span class="comment">// 可以看到最旧的元素被删除了</span></span><br><span class="line">        <span class="comment">// 且最近访问的4被移到了后面</span></span><br><span class="line">        System.out.println(lru);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LRU</span>&lt;<span class="title">K</span>, <span class="title">V</span>&gt; <span class="keyword">extends</span> <span class="title">LinkedHashMap</span>&lt;<span class="title">K</span>, <span class="title">V</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 保存缓存的容量</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> capacity;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">LRU</span><span class="params">(<span class="keyword">int</span> capacity, <span class="keyword">float</span> loadFactor)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(capacity, loadFactor, <span class="keyword">true</span>);</span><br><span class="line">        <span class="keyword">this</span>.capacity = capacity;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 重写removeEldestEntry()方法设置何时移除旧元素</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> eldest</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">removeEldestEntry</span><span class="params">(Map.Entry&lt;K, V&gt; eldest)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 当元素个数大于了缓存的容量, 就移除元素</span></span><br><span class="line">        <span class="keyword">return</span> size() &gt; <span class="keyword">this</span>.capacity;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="三、WeakHashMap基础"><a href="#三、WeakHashMap基础" class="headerlink" title="三、WeakHashMap基础"></a>三、WeakHashMap基础</h3><p><img src="./WeakHashMap.png" alt="WeakHashMap-structure"></p>
+<p>WeakHashMap是一种弱引用map，内部的key会存储为弱引用，当jvm gc的时候，如果这些key没有强引用存在的话，会被gc回收掉，下一次当我们操作map的时候会把对应的Entry整个删除掉，基于这种特性，WeakHashMap特别适用于缓存处理。</p>
+<p>WeakHashMap没有实现Clone和Serializable接口，所以不具有克隆和序列化的特性。</p>
+<p>（1）WeakHashMap使用（数组 + 链表）存储结构；</p>
+<p>（2）WeakHashMap中的key是弱引用，gc的时候会被清除；</p>
+<p>（3）每次对map的操作都会剔除失效key对应的Entry；</p>
+<p>（4）使用String作为key时，一定要使用new String()这样的方式声明key，才会失效，其它的基本类型的包装类型是一样的；</p>
+<p>（5）WeakHashMap常用来作为缓存使用；</p>
+<h3 id="四、TreeMap基础"><a href="#四、TreeMap基础" class="headerlink" title="四、TreeMap基础"></a>四、TreeMap基础</h3><p><img src="./TreeMap.png" alt="TreeMap-structure"></p>
+<p>TreeMap使用红黑树存储元素，可以保证元素按key值的大小进行遍历。</p>
+<p>TreeMap实现了Map、SortedMap、NavigableMap、Cloneable、Serializable等接口。</p>
+<p>SortedMap规定了元素可以按key的大小来遍历，它定义了一些返回部分map的方法。</p>
+<h3 id="五、ConcurrentHashMap基础"><a href="#五、ConcurrentHashMap基础" class="headerlink" title="五、ConcurrentHashMap基础"></a>五、ConcurrentHashMap基础</h3><p>ConcurrentHashMap是HashMap的线程安全版本，内部也是使用（数组 + 链表 + 红黑树）的结构来存储元素。</p>
+<h4 id="五-1-各种锁简介"><a href="#五-1-各种锁简介" class="headerlink" title="五(1) 各种锁简介"></a>五(1) 各种锁简介</h4><p>（1）synchronized</p>
+<p>java中的关键字，内部实现为监视器锁，主要是通过对象监视器在对象头中的字段来表明的。</p>
+<p>synchronized从旧版本到现在已经做了很多优化了，在运行时会有三种存在方式：偏向锁，轻量级锁，重量级锁。</p>
+<p>偏向锁，是指一段同步代码一直被一个线程访问，那么这个线程会自动获取锁，降低获取锁的代价。</p>
+<p>轻量级锁，是指当锁是偏向锁时，被另一个线程所访问，偏向锁会升级为轻量级锁，这个线程会通过自旋的方式尝试获取锁，不会阻塞，提高性能。</p>
+<p>重量级锁，是指当锁是轻量级锁时，当自旋的线程自旋了一定的次数后，还没有获取到锁，就会进入阻塞状态，该锁升级为重量级锁，重量级锁会使其他线程阻塞，性能降低。</p>
+<p>（2）CAS</p>
+<p>CAS，Compare And Swap，它是一种乐观锁，认为对于同一个数据的并发操作不一定会发生修改，在更新数据的时候，尝试去更新数据，如果失败就不断尝试。</p>
+<p>（3）volatile（非锁）</p>
+<p>java中的关键字，当多个线程访问同一个变量时，一个线程修改了这个变量的值，其他线程能够立即看得到修改的值。（这里牵涉到java内存模型的知识，感兴趣的同学可以自己查查相关资料）</p>
+<p>volatile只保证可见性，不保证原子性，比如 volatile修改的变量 i，针对i++操作，不保证每次结果都正确，因为i++操作是两步操作，相当于 i = i +1，先读取，再加1，这种情况volatile是无法保证的。</p>
+<p>（4）自旋锁</p>
+<p>自旋锁，是指尝试获取锁的线程不会阻塞，而是循环的方式不断尝试，这样的好处是减少线程的上下文切换带来的开锁，提高性能，缺点是循环会消耗CPU。</p>
+<p>（5）分段锁</p>
+<p>分段锁，是一种锁的设计思路，它细化了锁的粒度，主要运用在ConcurrentHashMap中，实现高效的并发操作，当操作不需要更新整个数组时，就只锁数组中的一项就可以了。</p>
+<p>（5）ReentrantLock</p>
+<p>可重入锁，是指一个线程获取锁之后再尝试获取锁时会自动获取锁，可重入锁的优点是避免死锁。</p>
+<p>其实，synchronized也是可重入锁。</p>
+<h4 id="五-2-优化"><a href="#五-2-优化" class="headerlink" title="五(2) 优化"></a>五(2) 优化</h4><p>（1）CAS + 自旋，乐观锁的思想，减少线程上下文切换的时间；</p>
+<p>（2）分段锁的思想，减少同一把锁争用带来的低效问题；</p>
+<p>（3）CounterCell，分段存储元素个数，减少多线程同时更新一个字段带来的低效；</p>
+<p>（4）@sun.misc.Contended（CounterCell上的注解），避免伪共享；（p.s.伪共享我们后面也会讲的^^）</p>
+<p>（5）多线程协同进行扩容；</p>
+<h3 id="六、ConcurrentSkipList基础"><a href="#六、ConcurrentSkipList基础" class="headerlink" title="六、ConcurrentSkipList基础"></a>六、ConcurrentSkipList基础</h3><p>跳表是一个随机化的数据结构，实质就是一种可以进行二分查找的有序链表。</p>
+<p>跳表在原有的有序链表上面增加了多级索引，通过索引来实现快速查找。</p>
+<p>跳表不仅能提高搜索性能，同时也可以提高插入和删除操作的性能。</p>
+<h3 id="七、关于Map的主要问题"><a href="#七、关于Map的主要问题" class="headerlink" title="七、关于Map的主要问题"></a>七、关于Map的主要问题</h3><h4 id="1-么是散列表？"><a href="#1-么是散列表？" class="headerlink" title="1. 么是散列表？"></a>1. 么是散列表？</h4><p>散列表（Hash table，也叫哈希表），是根据关键码值(Key value)而直接进行访问的数据结构。也就是说，它通过把关键码值映射到表中一个位置来访问记录，以加快查找的速度。这个映射函数叫做散列函数，存放记录的数组叫做散列表。</p>
+<h4 id="2-怎么实现一个散列表？"><a href="#2-怎么实现一个散列表？" class="headerlink" title="2. 怎么实现一个散列表？"></a>2. 怎么实现一个散列表？</h4><h4 id="3-Java中HashMap实现方式的演进？"><a href="#3-Java中HashMap实现方式的演进？" class="headerlink" title="3. Java中HashMap实现方式的演进？"></a>3. Java中HashMap实现方式的演进？</h4><h4 id="4-HashMap的容量有什么特点？"><a href="#4-HashMap的容量有什么特点？" class="headerlink" title="4. HashMap的容量有什么特点？"></a>4. HashMap的容量有什么特点？</h4><p>默认是16，每次扩容，容量变为之前的2倍，即容量总是2的次幂倍。</p>
+<h4 id="5-HashMap是怎么进行扩容的？"><a href="#5-HashMap是怎么进行扩容的？" class="headerlink" title="5. HashMap是怎么进行扩容的？"></a>5. HashMap是怎么进行扩容的？</h4><p>（1）如果使用是默认构造方法，则第一次插入元素时初始化为默认值，容量为16，扩容门槛为12；</p>
+<p>（2）如果使用的是非默认构造方法，则第一次插入元素时初始化容量等于扩容门槛，扩容门槛在构造方法里等于传入容量向上最近的2的n次方；</p>
+<p>（3）如果旧容量大于0，则新容量等于旧容量的2倍，但不超过最大容量2的30次方，新扩容门槛为旧扩容门槛的2倍；</p>
+<p>（4）创建一个新容量的桶；</p>
+<p>（5）搬移元素，原链表分化成两个链表，低位链表存储在原来桶的位置，高位链表搬移到原来桶的位置加旧容量的位置；</p>
+<h4 id="6-HashMap中的元素是否是有序的？"><a href="#6-HashMap中的元素是否是有序的？" class="headerlink" title="6. HashMap中的元素是否是有序的？"></a>6. HashMap中的元素是否是有序的？</h4><p>无序的，且不保证顺序不变；</p>
+<h4 id="7-HashMap何时进行树化？何时进行反树化？"><a href="#7-HashMap何时进行树化？何时进行反树化？" class="headerlink" title="7. HashMap何时进行树化？何时进行反树化？"></a>7. HashMap何时进行树化？何时进行反树化？</h4><p>当桶中的链表长度大于8时，且数组的容量大于64时，链表会进行树化(treeifyBin)，红黑树的查询效率是O(log n)；链表长度大于8，但是数组容量未达到64，会对数组进行扩容。</p>
+<h4 id="8-HashMap是怎么进行缩容的？"><a href="#8-HashMap是怎么进行缩容的？" class="headerlink" title="8. HashMap是怎么进行缩容的？"></a>8. HashMap是怎么进行缩容的？</h4><h4 id="9-HashMap插入、删除、查询元素的时间复杂度各是多少？"><a href="#9-HashMap插入、删除、查询元素的时间复杂度各是多少？" class="headerlink" title="9. HashMap插入、删除、查询元素的时间复杂度各是多少？"></a>9. HashMap插入、删除、查询元素的时间复杂度各是多少？</h4><p>O(1)；链表O(n)；红黑树O(log n)；</p>
+<h4 id="10-HashMap中的红黑树实现部分可以用其它数据结构代替吗？"><a href="#10-HashMap中的红黑树实现部分可以用其它数据结构代替吗？" class="headerlink" title="10. HashMap中的红黑树实现部分可以用其它数据结构代替吗？"></a>10. HashMap中的红黑树实现部分可以用其它数据结构代替吗？</h4><p>TreeMap使用红黑树存储元素；</p>
+<h4 id="11-LinkedHashMap是怎么实现的？"><a href="#11-LinkedHashMap是怎么实现的？" class="headerlink" title="11. LinkedHashMap是怎么实现的？"></a>11. LinkedHashMap是怎么实现的？</h4><p>LinkedHashMap内部维护了一个双向链表，能保证元素按插入的顺序访问，也能以访问顺序访问，可以看成是 LinkedList + HashMap。</p>
+<h4 id="12-LinkedHashMap是有序的吗？怎么个有序法？"><a href="#12-LinkedHashMap是有序的吗？怎么个有序法？" class="headerlink" title="12. LinkedHashMap是有序的吗？怎么个有序法？"></a>12. LinkedHashMap是有序的吗？怎么个有序法？</h4><p>是；</p>
+<ol>
+<li>添加了一种“双向链表”的结构存储所有元素的顺序，</li>
+<li>head双向链表的头节点，旧数据存在头节点，</li>
+<li>tail双向链表的尾节点，新数据存在尾节点，</li>
+<li>accessOrder是否需要按访问顺序排序，如果为false则按插入顺序存储元素，如果是true则按访问顺序存储元素，</li>
+<li>存储节点，继承自HashMap的Node类，next用于单链表存储于桶中，before和after用于双向链表存储所有元素。</li>
+</ol>
+<h4 id="13-LinkedHashMap如何实现LRU缓存淘汰策略？"><a href="#13-LinkedHashMap如何实现LRU缓存淘汰策略？" class="headerlink" title="13. LinkedHashMap如何实现LRU缓存淘汰策略？"></a>13. LinkedHashMap如何实现LRU缓存淘汰策略？</h4><p>将accessOrder设置为true（按访问顺序存储元素），重写removeEldestEntry方法。</p>
+<h4 id="14-WeakHashMap使用的数据结构？"><a href="#14-WeakHashMap使用的数据结构？" class="headerlink" title="14. WeakHashMap使用的数据结构？"></a>14. WeakHashMap使用的数据结构？</h4><p>WeakHashMap的存储结构只有（数组 + 链表）</p>
+<h4 id="15-WeakHashMap具有什么特性？"><a href="#15-WeakHashMap具有什么特性？" class="headerlink" title="15. WeakHashMap具有什么特性？"></a>15. WeakHashMap具有什么特性？</h4><p>WeakHashMap是一种弱引用map，内部的key会存储为弱引用，当jvm gc的时候，如果这些key没有强引用存在的话，会被gc回收掉，下一次当我们操作map的时候会把对应的Entry整个删除掉</p>
+<h4 id="16-WeakHashMap通常用来做什么？"><a href="#16-WeakHashMap通常用来做什么？" class="headerlink" title="16. WeakHashMap通常用来做什么？"></a>16. WeakHashMap通常用来做什么？</h4><p>WeakHashMap特别适用于缓存处理。</p>
+<h4 id="17-WeakHashMap使用String作为key是需要注意些什么？为什么？"><a href="#17-WeakHashMap使用String作为key是需要注意些什么？为什么？" class="headerlink" title="17. WeakHashMap使用String作为key是需要注意些什么？为什么？"></a>17. WeakHashMap使用String作为key是需要注意些什么？为什么？</h4><p>使用String作为key时，一定要使用new String()这样的方式声明key，才会生效，其它的基本类型的包装类型是一样的；</p>
+<h4 id="18-什么是弱引用？"><a href="#18-什么是弱引用？" class="headerlink" title="18. 什么是弱引用？"></a>18. 什么是弱引用？</h4><p>（1）强引用</p>
+<p>使用最普遍的引用。如果一个对象具有强引用，它绝对不会被gc回收。如果内存空间不足了，gc宁愿抛出OutOfMemoryError，也不是会回收具有强引用的对象。</p>
+<p>（2）软引用</p>
+<p>如果一个对象只具有软引用，则内存空间足够时不会回收它，但内存空间不够时就会回收这部分对象。只要这个具有软引用对象没有被回收，程序就可以正常使用。</p>
+<p>（3）弱引用</p>
+<p>如果一个对象只具有弱引用，则不管内存空间够不够，当gc扫描到它时就会回收它。</p>
+<p>（4）虚引用</p>
+<p>如果一个对象只具有虚引用，那么它就和没有任何引用一样，任何时候都可能被gc回收。</p>
+<p>软（弱、虚）引用必须和一个引用队列（ReferenceQueue）一起使用，当gc回收这个软（弱、虚）引用引用的对象时，会把这个软（弱、虚）引用放到这个引用队列中。</p>
+<h4 id="19-红黑树具有哪些特性？"><a href="#19-红黑树具有哪些特性？" class="headerlink" title="19. 红黑树具有哪些特性？"></a>19. 红黑树具有哪些特性？</h4><p>（1）每个节点或者是黑色，或者是红色。</p>
+<p>（2）根节点是黑色。</p>
+<p>（3）每个叶子节点（NIL）是黑色。（注意：这里叶子节点，是指为空(NIL或NULL)的叶子节点！）</p>
+<p>（4）如果一个节点是红色的，则它的子节点必须是黑色的。</p>
+<p>（5）从一个节点到该节点的子孙节点的所有路径上包含相同数目的黑节点。</p>
+<h4 id="20-TreeMap就有序的吗？怎么个有序法？"><a href="#20-TreeMap就有序的吗？怎么个有序法？" class="headerlink" title="20. TreeMap就有序的吗？怎么个有序法？"></a>20. TreeMap就有序的吗？怎么个有序法？</h4><p>SortedMap规定了元素可以按key的大小来遍历。</p>
+<h4 id="21-TreeMap是否需要扩容？"><a href="#21-TreeMap是否需要扩容？" class="headerlink" title="21. TreeMap是否需要扩容？"></a>21. TreeMap是否需要扩容？</h4><p>不需要，红黑树结构，不需要扩容。</p>
+<h4 id="22-什么是左旋？什么是右旋？"><a href="#22-什么是左旋？什么是右旋？" class="headerlink" title="22. 什么是左旋？什么是右旋？"></a>22. 什么是左旋？什么是右旋？</h4><h4 id="23-红黑树怎么插入元素？"><a href="#23-红黑树怎么插入元素？" class="headerlink" title="23. 红黑树怎么插入元素？"></a>23. 红黑树怎么插入元素？</h4><h4 id="24-红黑树怎么删除元素？"><a href="#24-红黑树怎么删除元素？" class="headerlink" title="24. 红黑树怎么删除元素？"></a>24. 红黑树怎么删除元素？</h4><h4 id="25-为什么要进行平衡？"><a href="#25-为什么要进行平衡？" class="headerlink" title="25. 为什么要进行平衡？"></a>25. 为什么要进行平衡？</h4><p>插入的元素默认都是红色，因为插入红色元素只违背了第4条特性，那么我们只要根据这个特性来平衡就容易多了。</p>
+<ol>
+<li><p>插入的元素如果是根节点，则直接涂成黑色即可，不用平衡；</p>
+</li>
+<li><p>插入的元素的父节点如果为黑色，不需要平衡；</p>
+</li>
+<li><p>插入的元素的父节点如果为红色，则违背了特性4，需要平衡，平衡时又分成下面三种情况：</p>
+</li>
+</ol>
+<h4 id="26-如何实现红黑树的遍历？"><a href="#26-如何实现红黑树的遍历？" class="headerlink" title="26. 如何实现红黑树的遍历？"></a>26. 如何实现红黑树的遍历？</h4><h4 id="27-TreeMap中是怎么遍历的？"><a href="#27-TreeMap中是怎么遍历的？" class="headerlink" title="27. TreeMap中是怎么遍历的？"></a>27. TreeMap中是怎么遍历的？</h4><p><a href="http://cmsblogs.com/?p=4743" target="_blank" rel="noopener">TreeMap的遍历</a></p>
+<p>（1）寻找第一个节点；从根节点开始找最左边的节点，即最小的元素。</p>
+<p>（2）循环遍历后继节点；寻找后继节点这个方法我们在删除元素的时候也用到过，当时的场景是有右子树，则从其右子树中寻找最小的节点。</p>
+<h4 id="28-TreeMap插入、删除、查询元素的时间复杂度各是多少？"><a href="#28-TreeMap插入、删除、查询元素的时间复杂度各是多少？" class="headerlink" title="28. TreeMap插入、删除、查询元素的时间复杂度各是多少？"></a>28. TreeMap插入、删除、查询元素的时间复杂度各是多少？</h4><h4 id="29-HashMap在多线程环境中什么时候会出现问题？"><a href="#29-HashMap在多线程环境中什么时候会出现问题？" class="headerlink" title="29. HashMap在多线程环境中什么时候会出现问题？"></a>29. HashMap在多线程环境中什么时候会出现问题？</h4><p> HashMap是非线程安全的，主要表现在：当需要扩容时，线程1得到一个元素的引用，此时线程1被刮起，线程2执行扩容，完成扩容后，线程1继续执行，此时之前的元素的next指针的元素可能已经变成这个的元素的前驱元素，形成互相引用的循环，当获取这个元素的值时，会导致死循环。</p>
+<h4 id="30-ConcurrentHashMap的存储结构？"><a href="#30-ConcurrentHashMap的存储结构？" class="headerlink" title="30. ConcurrentHashMap的存储结构？"></a>30. ConcurrentHashMap的存储结构？</h4><p>ConcurrentHashMap是HashMap的线程安全版本，内部也是使用（数组 + 链表 + 红黑树）的结构来存储元素。</p>
+<h4 id="31-ConcurrentHashMap是怎么保证并发安全的？"><a href="#31-ConcurrentHashMap是怎么保证并发安全的？" class="headerlink" title="31. ConcurrentHashMap是怎么保证并发安全的？"></a>31. ConcurrentHashMap是怎么保证并发安全的？</h4><p>如果待插入的元素所在的桶不为空且不在迁移元素，则锁住这个桶（分段锁）</p>
+<h4 id="32-ConcurrentHashMap是怎么扩容的？"><a href="#32-ConcurrentHashMap是怎么扩容的？" class="headerlink" title="32. ConcurrentHashMap是怎么扩容的？"></a>32. ConcurrentHashMap是怎么扩容的？</h4><h4 id="33-ConcurrentHashMap的size-方法的实现知多少？"><a href="#33-ConcurrentHashMap的size-方法的实现知多少？" class="headerlink" title="33. ConcurrentHashMap的size()方法的实现知多少？"></a>33. ConcurrentHashMap的size()方法的实现知多少？</h4><h4 id="34-ConcurrentHashMap是强一致性的吗？"><a href="#34-ConcurrentHashMap是强一致性的吗？" class="headerlink" title="34. ConcurrentHashMap是强一致性的吗？"></a>34. ConcurrentHashMap是强一致性的吗？</h4><p>查询操作是不会加锁的，所以ConcurrentHashMap不是强一致性的；</p>
+<h4 id="35-ConcurrentHashMap不能解决什么问题？"><a href="#35-ConcurrentHashMap不能解决什么问题？" class="headerlink" title="35. ConcurrentHashMap不能解决什么问题？"></a>35. ConcurrentHashMap不能解决什么问题？</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;Integer, Integer&gt; map = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unsafeUpdate</span><span class="params">(Integer key, Integer value)</span> </span>&#123;</span><br><span class="line">    Integer oldValue = map.get(key);</span><br><span class="line">    <span class="keyword">if</span> (oldValue == <span class="keyword">null</span>) &#123;</span><br><span class="line">        map.put(key, value);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里如果有多个线程同时调用unsafeUpdate()这个方法，ConcurrentHashMap还能保证线程安全吗？</p>
+<p>答案是不能。因为get()之后if之前可能有其它线程已经put()了这个元素，这时候再put()就把那个线程put()的元素覆盖了。</p>
+<p>那怎么修改呢？</p>
+<p>答案也很简单，使用putIfAbsent()方法，它会保证元素不存在时才插入元素，如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">safeUpdate</span><span class="params">(Integer key, Integer value)</span> </span>&#123;</span><br><span class="line">    map.putIfAbsent(key, value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="36-ConcurrentHashMap中哪些地方运用到分段锁的思想？"><a href="#36-ConcurrentHashMap中哪些地方运用到分段锁的思想？" class="headerlink" title="36. ConcurrentHashMap中哪些地方运用到分段锁的思想？"></a>36. ConcurrentHashMap中哪些地方运用到分段锁的思想？</h4><ol>
+<li><p>添加、删除元素；</p>
+</li>
+<li><p>扩容迁移元素时会锁住当前桶，也是分段锁的思想；</p>
+</li>
+</ol>
+<h4 id="37-什么是伪共享？怎么避免伪共享？"><a href="#37-什么是伪共享？怎么避免伪共享？" class="headerlink" title="37. 什么是伪共享？怎么避免伪共享？"></a>37. 什么是伪共享？怎么避免伪共享？</h4><h4 id="38-什么是跳表？"><a href="#38-什么是跳表？" class="headerlink" title="38. 什么是跳表？"></a>38. 什么是跳表？</h4><p>跳表是一个随机化的数据结构，实质就是一种可以进行二分查找的有序链表。</p>
+<p>跳表在原有的有序链表上面增加了多级索引，通过索引来实现快速查找。</p>
+<p>跳表不仅能提高搜索性能，同时也可以提高插入和删除操作的性能。</p>
+<h4 id="40-ConcurrentSkipList是有序的吗？"><a href="#40-ConcurrentSkipList是有序的吗？" class="headerlink" title="40. ConcurrentSkipList是有序的吗？"></a>40. ConcurrentSkipList是有序的吗？</h4><p>不是；</p>
+<h4 id="41-ConcurrentSkipList是如何保证线程安全的？"><a href="#41-ConcurrentSkipList是如何保证线程安全的？" class="headerlink" title="41. ConcurrentSkipList是如何保证线程安全的？"></a>41. ConcurrentSkipList是如何保证线程安全的？</h4><h4 id="42-ConcurrentSkipList插入、删除、查询元素的时间复杂度各是多少？"><a href="#42-ConcurrentSkipList插入、删除、查询元素的时间复杂度各是多少？" class="headerlink" title="42. ConcurrentSkipList插入、删除、查询元素的时间复杂度各是多少？"></a>42. ConcurrentSkipList插入、删除、查询元素的时间复杂度各是多少？</h4><h4 id="43-ConcurrentSkipList的索引具有什么特性？"><a href="#43-ConcurrentSkipList的索引具有什么特性？" class="headerlink" title="43. ConcurrentSkipList的索引具有什么特性？"></a>43. ConcurrentSkipList的索引具有什么特性？</h4><h4 id="44-为什么Redis选择使用跳表而不是红黑树来实现有序集合？"><a href="#44-为什么Redis选择使用跳表而不是红黑树来实现有序集合？" class="headerlink" title="44. 为什么Redis选择使用跳表而不是红黑树来实现有序集合？"></a>44. 为什么Redis选择使用跳表而不是红黑树来实现有序集合？</h4><p>Redis的有序集合支持的操作：</p>
+<p>1）插入元素</p>
+<p>2）删除元素</p>
+<p>3）查找元素</p>
+<p>4）有序输出所有元素</p>
+<p>5）查找区间内所有元素</p>
+<p>其中，前4项红黑树都可以完成，且时间复杂度与跳表一致。</p>
+<p>但是，最后一项，红黑树的效率就没有跳表高了。</p>
+<p>在跳表中，要查找区间的元素，我们只要定位到两个区间端点在最低层级的位置，然后按顺序遍历元素就可以了，非常高效。</p>
+<p>而红黑树只能定位到端点后，再从首位置开始每次都要查找后继节点，相对来说是比较耗时的。</p>
+<p>此外，跳表实现起来很容易且易读，红黑树实现起来相对困难，所以Redis选择使用跳表来实现有序集合。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>Java SE 基础之List</title>
+    <url>/2019/08/26/Java-SE-%E5%9F%BA%E7%A1%80%E4%B9%8BList/</url>
+    <content><![CDATA[<p>java中提供的List的实现主要有ArrayList、LinkedList、CopyOnWriteArrayList，另外还有两个古老的类Vector和Stack。</p>
+<a id="more"></a>
+
+<h3 id="一、ArrayList-基础"><a href="#一、ArrayList-基础" class="headerlink" title="一、ArrayList 基础"></a>一、ArrayList 基础</h3><p>  <img src="./ArrayList.png" alt="ArrayList-structure"></p>
+<p>  ArrayList是一种以数组实现的List，与数组相比，它具有动态扩展的能力，因此也可称之为动态数组。</p>
+<p>  ArrayList实现了List，提供了基础的添加、删除、遍历等操作。</p>
+<p>  ArrayList实现了RandomAccess，提供了随机访问的能力。</p>
+<p>  ArrayList实现了Cloneable，可以被克隆。</p>
+<p>  ArrayList实现了Serializable，可以被序列化</p>
+<h3 id="二、LinkedList-基础"><a href="#二、LinkedList-基础" class="headerlink" title="二、LinkedList 基础"></a>二、LinkedList 基础</h3><p>  <img src="./LinkedList.png" alt="LinkedList-structure"></p>
+<p>  LinkedList是一个以双向链表实现的List，它除了作为List使用，还可以作为队列或者栈来使用。</p>
+<p>  LinkedList在功能上等于ArrayList + ArrayDeque。</p>
+<p>  通过继承体系，我们可以看到LinkedList不仅实现了List接口，还实现了Queue和Deque接口，所以它既能作为List使用，也能作为双端队列使用，当然也可以作为栈使用。</p>
+<h3 id="三、CopyOnWriteArrayList-基础"><a href="#三、CopyOnWriteArrayList-基础" class="headerlink" title="三、CopyOnWriteArrayList 基础"></a>三、CopyOnWriteArrayList 基础</h3><p>  <img src="./CopyOnWriteArrayList.png" alt="CopyOnWriteArrayList-structure"></p>
+<p>  CopyOnWriteArrayList是ArrayList的线程安全版本，内部也是通过数组实现，每次对数组的修改都完全拷贝一份新的数组来修改，修改完了再替换掉老数组，这样保证了只阻塞写操作，不阻塞读操作，实现读写分离。</p>
+<p>（1）CopyOnWriteArrayList使用ReentrantLock重入锁加锁，保证线程安全；</p>
+<p>（2）CopyOnWriteArrayList的写操作都要先拷贝一份新数组，在新数组中做修改，修改完了再用新数组替换老数组，所以空间复杂度是O(n)，性能比较低下；</p>
+<p>（3）CopyOnWriteArrayList的读操作支持随机访问，时间复杂度为O(1)；</p>
+<p>（4）CopyOnWriteArrayList采用读写分离的思想，读操作不加锁，写操作加锁，且写操作占用较大内存空间，所以适用于读多写少的场合；</p>
+<p>（5）CopyOnWriteArrayList只保证最终一致性，不保证实时一致性；</p>
+<h3 id="四、List-相关问题"><a href="#四、List-相关问题" class="headerlink" title="四、List 相关问题"></a>四、List 相关问题</h3><h4 id="1-ArrayList和LinkedList有什么区别？"><a href="#1-ArrayList和LinkedList有什么区别？" class="headerlink" title="1. ArrayList和LinkedList有什么区别？"></a>1. ArrayList和LinkedList有什么区别？</h4><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>ArrayList</th>
+<th>LinkedList</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>实现方式</td>
+<td>底层是数组，基于索引的数据接口</td>
+<td>底层是双向链表</td>
+</tr>
+<tr>
+<td>随机访问</td>
+<td>随机访问速度快（O(1)）</td>
+<td>不支持随机访问</td>
+</tr>
+<tr>
+<td>插入/删除</td>
+<td>需要考虑改变数组大小，扩容时需要复制数组到新数组，需要移动数组元素(O(n))</td>
+<td>不需要改变数组大小</td>
+</tr>
+</tbody></table>
+<h4 id="2-ArrayList是怎么扩容的？"><a href="#2-ArrayList是怎么扩容的？" class="headerlink" title="2. ArrayList是怎么扩容的？"></a>2. ArrayList是怎么扩容的？</h4><p>（1）检查是否需要扩容；</p>
+<p>（2）如果elementData等于DEFAULTCAPACITY_EMPTY_ELEMENTDATA(空数组)，则初始化容量大小为DEFAULT_CAPACITY(10)；</p>
+<p>（3）新容量是老容量的1.5倍（oldCapacity + (oldCapacity &gt;&gt; 1)）；如果加了这么多容量发现比需要的容量还小，则以需要的容量为准；如果新容量已经超过最大容量了，则使用最大容量。</p>
+<p>（4）创建新容量的数组并把老数组拷贝到新数组(Arrays.copyOf(elementData, newCapacity))；</p>
+<h4 id="3-ArrayList是怎么实现序列化和反序列化的？"><a href="#3-ArrayList是怎么实现序列化和反序列化的？" class="headerlink" title="3. ArrayList是怎么实现序列化和反序列化的？"></a>3. ArrayList是怎么实现序列化和反序列化的？</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">writeObject</span><span class="params">(java.io.ObjectOutputStream s)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> java.io.IOException</span>&#123;</span><br><span class="line">    <span class="comment">// 防止序列化期间有修改</span></span><br><span class="line">    <span class="keyword">int</span> expectedModCount = modCount;</span><br><span class="line">    <span class="comment">// 写出非transient非static属性（会写出size属性）</span></span><br><span class="line">    s.defaultWriteObject();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 写出元素个数</span></span><br><span class="line">    s.writeInt(size);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 依次写出元素</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;size; i++) &#123;</span><br><span class="line">        s.writeObject(elementData[i]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果有修改，抛出异常</span></span><br><span class="line">    <span class="keyword">if</span> (modCount != expectedModCount) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> ConcurrentModificationException();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readObject</span><span class="params">(java.io.ObjectInputStream s)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> java.io.IOException, ClassNotFoundException </span>&#123;</span><br><span class="line">    <span class="comment">// 声明为空数组</span></span><br><span class="line">    elementData = EMPTY_ELEMENTDATA;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 读入非transient非static属性（会读取size属性）</span></span><br><span class="line">    s.defaultReadObject();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 读入元素个数，没什么用，只是因为写出的时候写了size属性，读的时候也要按顺序来读</span></span><br><span class="line">    s.readInt();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (size &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 计算容量</span></span><br><span class="line">        <span class="keyword">int</span> capacity = calculateCapacity(elementData, size);</span><br><span class="line">        SharedSecrets.getJavaOISAccess().checkArray(s, Object[].class, capacity);</span><br><span class="line">        <span class="comment">// 检查是否需要扩容</span></span><br><span class="line">        ensureCapacityInternal(size);</span><br><span class="line"></span><br><span class="line">        Object[] a = elementData;</span><br><span class="line">        <span class="comment">// 依次读取元素到数组中</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;size; i++) &#123;</span><br><span class="line">            a[i] = s.readObject();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>查看writeObject()方法可知，先调用s.defaultWriteObject()方法，再把size写入到流中，再把元素一个一个的写入到流中。</p>
+<p>一般地，只要实现了Serializable接口即可自动序列化，writeObject()和readObject()是为了自己控制序列化的方式，这两个方法必须声明为private，在java.io.ObjectStreamClass#getPrivateMethod()方法中通过反射获取到writeObject()这个方法。</p>
+<p>在ArrayList的writeObject()方法中先调用了s.defaultWriteObject()方法，这个方法是写入非static非transient的属性，在ArrayList中也就是size属性。同样地，在readObject()方法中先调用了s.defaultReadObject()方法解析出了size属性。</p>
+<p>elementData定义为transient的优势，自己根据size序列化真实的元素，而不是根据数组的长度序列化元素，减少了空间占用。</p>
+<h4 id="4-集合的方法toArray-有什么问题？"><a href="#4-集合的方法toArray-有什么问题？" class="headerlink" title="4. 集合的方法toArray()有什么问题？"></a>4. 集合的方法toArray()有什么问题？</h4><h4 id="5-什么是fail-fast？"><a href="#5-什么是fail-fast？" class="headerlink" title="5. 什么是fail-fast？"></a>5. 什么是fail-fast？</h4><p>fail-fast 机制，即快速失败机制，是java集合(Collection)中的一种错误检测机制。当在迭代集合的过程中该集合在结构上发生改变的时候，就有可能会发生fail-fast，即抛出ConcurrentModificationException异常。fail-fast机制并不保证在不同步的修改下一定会抛出异常，它只是尽最大努力去抛出，所以这种机制一般仅用于检测bug。</p>
+<h4 id="6-CopyOnWriteArrayList是怎么保证并发安全的？"><a href="#6-CopyOnWriteArrayList是怎么保证并发安全的？" class="headerlink" title="6.CopyOnWriteArrayList是怎么保证并发安全的？"></a>6.CopyOnWriteArrayList是怎么保证并发安全的？</h4><p>CopyOnWriteArrayList使用ReentrantLock重入锁加锁，保证线程安全；</p>
+<h4 id="7-CopyOnWriteArrayList的实现采用了什么思想？"><a href="#7-CopyOnWriteArrayList的实现采用了什么思想？" class="headerlink" title="7. CopyOnWriteArrayList的实现采用了什么思想？"></a>7. CopyOnWriteArrayList的实现采用了什么思想？</h4><p>CopyOnWriteArrayList采用读写分离的思想，读操作不加锁，写操作加锁，且写操作占用较大内存空间，所以适用于读多写少的场合；</p>
+<h4 id="8-CopyOnWriteArrayList是不是强一致性的？"><a href="#8-CopyOnWriteArrayList是不是强一致性的？" class="headerlink" title="8.CopyOnWriteArrayList是不是强一致性的？"></a>8.CopyOnWriteArrayList是不是强一致性的？</h4><p>不是，CopyOnWriteArrayList只保证最终一致性，不保证实时一致性；</p>
+<h4 id="9-CopyOnWriteArrayList为什么没有size属性？"><a href="#9-CopyOnWriteArrayList为什么没有size属性？" class="headerlink" title="9.CopyOnWriteArrayList为什么没有size属性？"></a>9.CopyOnWriteArrayList为什么没有size属性？</h4><p>因为每次修改都是拷贝一份正好可以存储目标个数元素的数组，所以不需要size属性了，数组的长度就是集合的大小，而不像ArrayList数组的长度实际是要大于集合的大小的。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>懒人版docker部署spring boot</title>
+    <url>/2019/08/06/%E6%87%92%E4%BA%BA%E7%89%88docker%E9%83%A8%E7%BD%B2spring-boot/</url>
+    <content><![CDATA[<blockquote>
+<p>曾经看到马老师写的一篇文章，说懒才是人类进步的阶梯——懒得爬楼梯，所以有了电梯，懒得包肉夹馍，就把馅撒在饼上，做成的披萨卖的比肉夹馍还贵，懒得泡茶，糖水装进瓶子就买，可乐卖成了最畅销的饮料…由于年代久远，具体内容和真实性已经不可考，但是文章的新颖的观点却给我留下很深刻的印象。<br></p>
+</blockquote>
+<a id="more"></a>
+
+<p>在本地开发spring boot时，要安装一次jdk和maven，配置好环境变量，到了部署的时候，还需要在服务器再安装一遍，想想都累。而搜索的很多博客，都只讲了打包好的java的docker部署，但如果打包都不想做，有没有一步到位的方法呢？当然是有的，本文将逐步讲解只有工程文件的基础上，如何打包和部署spring boot应用。</p>
+<h3 id="一、环境要求"><a href="#一、环境要求" class="headerlink" title="一、环境要求"></a>一、环境要求</h3><ul>
+<li><p>docker 自然是必不可少的（没有安装的，可以参考<a href="https://docs.docker.com/install/linux/docker-ce/ubuntu/" target="_blank" rel="noopener">docker docs官方文档安装</a>）；</p>
+</li>
+<li><p>为了加快docker镜像的下载速度，建议将docker镜像修改为国内源；使用vim 编辑 <strong>/etc/docker/daemon.json</strong> 文件，没有该文件的话，新建一个，修改以下内容：</p>
+</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line">vim /etc/docker/daemon.json</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">"registry-mirrors"</span>: [<span class="string">"https://docker.mirrors.ustc.edu.cn/"</span>, <span class="string">"https://registry.docker-cn.com/"</span>] </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"># 重启docker使配置其生效</span><br><span class="line">systemctl restart docker</span><br></pre></td></tr></table></figure>
+
+<h3 id="二、修改项目maven仓库源"><a href="#二、修改项目maven仓库源" class="headerlink" title="二、修改项目maven仓库源"></a>二、修改项目maven仓库源</h3><p>编辑项目的pom.xml文件，添加以下内容，将当前项目maven仓库源修改为阿里云的镜像；</p>
+<figure class="highlight"><table><tr><td class="code"><pre><span class="line">&lt;!--  maven 仓库使用阿里云镜像  --&gt;</span><br><span class="line">&lt;repositories&gt;</span><br><span class="line">    &lt;repository&gt;</span><br><span class="line">        &lt;id&gt;central&lt;/id&gt;</span><br><span class="line">        &lt;name&gt;aliyun maven&lt;/name&gt;</span><br><span class="line">        &lt;url&gt;http:<span class="comment">//maven.aliyun.com/nexus/content/groups/public/&lt;/url&gt;</span></span><br><span class="line">        &lt;layout&gt;default&lt;/layout&gt;</span><br><span class="line">        &lt;!-- 是否开启发布版构件下载 --&gt;</span><br><span class="line">        &lt;releases&gt;</span><br><span class="line">            &lt;enabled&gt;true&lt;/enabled&gt;</span><br><span class="line">        &lt;/releases&gt;</span><br><span class="line">        &lt;!-- 是否开启快照版构件下载 --&gt;</span><br><span class="line">        &lt;snapshots&gt;</span><br><span class="line">            &lt;enabled&gt;false&lt;/enabled&gt;</span><br><span class="line">        &lt;/snapshots&gt;</span><br><span class="line">    &lt;/repository&gt;</span><br><span class="line">&lt;/repositories&gt;</span><br></pre></td></tr></table></figure>
+
+<h3 id="三、编写Dockerfile文件"><a href="#三、编写Dockerfile文件" class="headerlink" title="三、编写Dockerfile文件"></a>三、编写Dockerfile文件</h3><p>这是docker部署应用的最重要的一环，此文件将指明项目所需要的基础镜像，以及在此镜像上的操作，将以此文件为基础，构建项目的部署容器。</p>
+<p>在项目的根目录下，新建一个Dockerfile文件，内容如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># First stage - Compiling application</span><br><span class="line">FROM registry.cn-hangzhou.aliyuncs.com/acs/maven:3-jdk-8 AS build-env</span><br><span class="line"></span><br><span class="line">ENV MY_HOME=/app</span><br><span class="line">RUN mkdir -p $MY_HOME</span><br><span class="line">WORKDIR $MY_HOME</span><br><span class="line">ADD pom.xml $MY_HOME</span><br><span class="line"></span><br><span class="line"># get all the downloads out of the way</span><br><span class="line">RUN [&quot;/usr/local/bin/mvn-entrypoint.sh&quot;,&quot;mvn&quot;,&quot;verify&quot;,&quot;clean&quot;,&quot;--fail-never&quot;]</span><br><span class="line"></span><br><span class="line"># add source</span><br><span class="line">ADD . $MY_HOME</span><br><span class="line"></span><br><span class="line"># run maven verify</span><br><span class="line">RUN [&quot;/usr/local/bin/mvn-entrypoint.sh&quot;,&quot;mvn&quot;,&quot;verify&quot;, &quot;-Dmaven.test.skip=true&quot;]</span><br><span class="line"></span><br><span class="line"># Second stage - build image</span><br><span class="line">FROM openjdk:8-jre-alpine</span><br><span class="line"></span><br><span class="line">COPY --from=build-env /app/target/*.jar /app.jar</span><br><span class="line"></span><br><span class="line">ENV JAVA_OPTS=&quot;&quot;</span><br><span class="line">ENV SERVER_PORT 8080</span><br><span class="line"></span><br><span class="line">EXPOSE $&#123;SERVER_PORT&#125;</span><br><span class="line"></span><br><span class="line">ENTRYPOINT [ &quot;sh&quot;, &quot;-c&quot;, &quot;java $JAVA_OPTS -Djava.security.egd=file:/dev/urandom -jar /app.jar&quot; ]</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，部署分为两个阶段：</p>
+<ul>
+<li><ol>
+<li>在maven镜像基础上，检查项目的pom.xml指明的依赖，下载完依赖后，将项目文件复制进容器，打包项目。</li>
+</ol>
+</li>
+<li><ol start="2">
+<li>在openjdk:8镜像的基础上，暴露出容器的8080端口，运行打包好的jar文件，完成部署过程。</li>
+</ol>
+</li>
+</ul>
+<p>上述两个基础镜像的版本可以根据自己的需要进行更改。但基本理念不变。</p>
+<h3 id="四、构建项目镜像"><a href="#四、构建项目镜像" class="headerlink" title="四、构建项目镜像"></a>四、构建项目镜像</h3><p>在此基础上，构建出一个镜像：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">docker build -t spring-docker-demo ./</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>-t  指定生成镜像的名称<br>./  指定Dockerfile文件的位置</p>
+</blockquote>
+<p>执行成功后，使用 <strong>docker images</strong>查看全部镜像，看到如下内容，则镜像构建成功：<br><img src="./docker-images.png" alt="docker images"></p>
+<h3 id="五、运行"><a href="#五、运行" class="headerlink" title="五、运行"></a>五、运行</h3><p>运行容器：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">docker run -p 8083:8080 -d --name spring-docker-demo spring-docker-demo:1.1</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>-p      端口映射，本地端口:容器端口<br>-d      后台运行模式<br>–name  自定义容器名字</p>
+</blockquote>
+<p>使用<strong>docker ps</strong>查看容器运行情况，可以看到刚运行的应用已经启动了：</p>
+<p><img src="./docker-container.png" alt="docker images"></p>
+<p>可以通过服务器ip加端口号访问刚才运行的应用进一步确认，这个端口号是映射在宿主机的端口号，而不是应用暴露的端口号，这里，端口号是8083；</p>
+<p>一个spring boot项目就已经打包部署成功了，更多问题，欢迎到<a href="https://github.com/MuffinYu/spring-boot-with-docker" target="_blank" rel="noopener">github仓库</a>提issuse进行交流。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>HTTP详解[转]</title>
+    <url>/2019/07/23/HTTP%E8%AF%A6%E8%A7%A3-%E8%BD%AC/</url>
+    <content><![CDATA[<p>爬虫又称网络爬虫，所以在讲解爬虫之前，我们有必要了解一下什么是网络？网络是由若干节点和连接这些节点的链路构成，然后网络与网络之间所串连成的庞大网络叫做互联网，而我们今天要讲的HTTP（HyperText Transfer Protocol 超文本传输协议)是互联网上应用最为广泛的一种网络协议，它是由万维网协会（World Wide Web Consortium）制定发布。</p>
+<a id="more"></a>
+<p>文章主要以一次HTTP请求的整个过程来讲解(DNS解析不讲)：HTTP起源、TCP/IP协议、建立TCP连接、客户端请求、服务端响应、断开TCP连接，文章最后还捎带讲了与HTTP相关知识。文章较长，建议收藏或转发后阅读！<br><img src="./http-detail-1.jpeg" alt="HTTP请求流程"></p>
+<h3 id="一、简介"><a href="#一、简介" class="headerlink" title="一、简介"></a>一、简介</h3><p>1.起源<br>今天我们能够在网络中畅游，都得益于一位计算机科学家蒂姆·伯纳斯·李的构想。1991年8月6日，蒂姆·伯纳斯·李在位于欧洲粒子物理研究所（CERN）的NeXT计算机上，正式公开运行世界上第一个Web网站（<a href="http://info.cern.ch" target="_blank" rel="noopener">http://info.cern.ch</a> ），建立起基本的互联网基础概念和技术体系，由此开启了网络信息时代的序幕。<br><img src="./http-detail-2.jpg" alt="HTTP请求流程"></p>
+<p>伯纳斯·李的提案包含了网络的基本概念并逐步建立了所有必要的工具：</p>
+<p>提出HTTP (Hypertext Transfer Protocol) 超文本传输协议，允许用户通过单击超链接访问资源；<br>提出使用HTML超文本标记语言(Hypertext Markup Language)作为创建网页的标准；<br>创建了统一资源定位器URL (Uniform Resource Locator)作为网站地址系统，就是沿用至今的<a href="http://www" target="_blank" rel="noopener">http://www</a> URL格式；<br>创建第一个Web浏览器，称为万维网浏览器，这也是一个Web编辑器；<br>创建第一个Web服务器（<a href="http://info.cern.ch）以及描述项目本身的第一个Web页面。" target="_blank" rel="noopener">http://info.cern.ch）以及描述项目本身的第一个Web页面。</a><br>2.特点<br>HTTP 协议一共有五大特点：</p>
+<ul>
+<li>支持客户/服务器模式。</li>
+<li>简单快速：客户向服务器请求服务时，只需传送请求方法和路径。</li>
+<li>灵活：HTTP允许传输任意类型的数据对象。正在传输的类型由Content-Type（Content-Type是HTTP包中用来表示内容类型的标识）加以标记。</li>
+<li>无连接：无连接的含义是限制每次连接只处理一个请求。服务器处理完客户的请求，并收到客户的应答后，即断开连接。采用这种方式可以节省传输时间。</li>
+<li>无状态：无状态是指协议对于事务处理没有记忆能力，服务器不知道客户端是什么状态。即我们给服务器发送 HTTP 请求之后，服务器根据请求，会给我们发送数据过来，但是，发送完，不会记录任何信息（Cookie和Session孕育而生，后期再讲）。</li>
+</ul>
+<h3 id="二、TCP-IP协议"><a href="#二、TCP-IP协议" class="headerlink" title="二、TCP/IP协议"></a>二、TCP/IP协议</h3><p>我们经常听到一句话就是：HTTP是一个基于TCP/IP协议簇来传递数据。</p>
+<p>如何理解上面那句话？我们来看看TCP/IP四层模型就明白了。<br><img src="./http-detail-3.jpg" alt="HTTP请求流程"></p>
+<p>从上图我们可以清晰的看到HTTP使用的传输层协议为TCP协议，而网络层使用的是IP协议（当然还使用了很多其他协议），所以说HTTP是一个基于TCP/IP协议簇来传递数据。</p>
+<p>同样我们可以看到ping走的ICMP协议，这也就是为什么有时候我们开vps可以上网，但是ping google却ping不通的原因，因为走的是不同的协议。</p>
+<p>那TCP/IP协议簇大致是如何工作的，我们再来看看下图：<br><img src="./http-detail-4.jpg" alt="HTTP请求流程"></p>
+<p>我们可以看到在数据发送端是一层一层封装数据，数据接收端一层一层拆封，最后应用层获得数据。</p>
+<h3 id="三、建立TCP连接"><a href="#三、建立TCP连接" class="headerlink" title="三、建立TCP连接"></a>三、建立TCP连接</h3><p>我们知道了TCP/IP协议簇大致的工作原理之后，我们来看看HTTP是如何建立连接的。</p>
+<p>1.TCP包头信息<br>前面咱们讲过HTTP是一个基于TCP/IP协议簇来传递数据，所以这HTTP建立连接也就是建立TCP连接，TCP如何建立连接，一起来看看TCP包信息结构吧。<br><img src="./http-detail-5.jpg" alt="HTTP请求流程"></p>
+<p>TCP报文包=TCP头信息+TCP数据体，而在TCP头信息中包含了6种控制位（上图红色框中），这六种标志位就代表着TCP连接的状态：</p>
+<p>URG：紧急数据（urgent data）—这是一条紧急信息<br>ACK：确认已收到<br>PSH：提示接收端应用程序应该立即从tcp接受缓冲区中读走数据<br>RST：表示要求对方重新建立连接<br>SYN：表示请求建立一个连接<br>FIN：表示通知对方本端要关闭连接了<br>2.建立连接过程<br>了解了TCP包头信息之后，我们就可以正式看看TCP建立连接的三次握手了。<br><img src="./http-detail-6.jpg" alt="HTTP请求流程"></p>
+<p>三次握手讲解：</p>
+<p>客户端发送位码为syn＝1,随机产生seq number=1234567的数据包到服务器，服务器由SYN=1知道客户端要求建立联机（客户端：我要连接你）<br>服务器收到请求后要确认联机信息，向A发送ack number=(客户端的seq+1),syn=1,ack=1,随机产生seq=7654321的包（服务器：好的，你来连吧）<br>客户端收到后检查ack number是否正确，即第一次发送的seq number+1,以及位码ack是否为1，若正确，客户端会再发送ack number=(服务器的seq+1),ack=1，服务器收到后确认seq值与ack=1则连接建立成功。（客户端：好的，我来了）<br>面试官：为什么http建立连接需要三次握手，不是两次或四次<br>答：<strong>三次是最少的安全次数，两次不安全，四次浪费资源</strong></p>
+<h3 id="四、客户端请求"><a href="#四、客户端请求" class="headerlink" title="四、客户端请求"></a>四、客户端请求</h3><p>客户端与服务器连接上了之后，客户端就可以开始向服务器请求资源，就可以开始发送HTTP请求了。</p>
+<p>1.HTTP请求报文结构<br>我们之前说过TCP报文包=TCP头信息+TCP数据体，TCP头信息我们已经讲了，现在来讲TCP数据体，也就是我们的HTTP请求报文。<br><img src="./http-detail-7.jpg" alt="HTTP请求流程"></p>
+<p>2.HTTP请求实例<br>来看看实际的HTTP请求例子：<br><img src="./http-detail-9.jpg" alt="HTTP请求流程"></p>
+<p>①是请求方法，HTTP/1.1 定义的请求方法有8种：GET、POST、PUT、DELETE、PATCH、HEAD、OPTIONS、TRACE,最常的两种GET和POST，如果是RESTful接口的话一般会用到GET、POST、DELETE、PUT<br>②为请求对应的URL地址，它和报文头的Host属性组成完整的请求URL<br>③是协议名称及版本号<br>④是HTTP的报文头，报文头包含若干个属性，格式为“属性名:属性值”，服务端据此获取客户端的信息<br>⑤是报文体，它将一个页面表单中的组件值通过param1=value1&amp;param2=value2的键值对形式编码成一个格式化串，它承载多个请求参数的数据。不但报文体可以传递请求参数，请求URL也可以通过类似于“/chapter15/user.html? param1=value1&amp;param2=value2”的方式传递请求参数。<br>请求头参数非常多，猪哥就不一一说明，只说明两个低级的反扒参数：</p>
+<p>User-Agent：客户端使用的操作系统和浏览器的名称和版本，有些网站会限制请求浏览器<br>Referer：先前网页的地址，表示此请求来自哪里，有些网站会限制请求来源</p>
+<h3 id="五、服务端响应"><a href="#五、服务端响应" class="headerlink" title="五、服务端响应"></a>五、服务端响应</h3><p>服务器在收到客户端请求处理完需要响应并返回给客户端，而HTTP响应报文结构与请求结构体一致。</p>
+<p>1.HTTP响应报文结构<br><img src="./http-detail-10.jpg" alt="HTTP请求流程"></p>
+<p>2.HTTP响应实例<br><img src="./http-detail-11.jpg" alt="HTTP请求流程"></p>
+<p>3.响应状态码<br>响应报文中我们重点关注下：服务器的响应状态码，面试也很容易问到，下面猪哥只列出分类，详细状态码自行上网查找了解。<br><img src="./http-detail-12.jpg" alt="HTTP请求流程"></p>
+<h3 id="六、断开连接"><a href="#六、断开连接" class="headerlink" title="六、断开连接"></a>六、断开连接</h3><p>在服务器响应完毕后，一次会话就结束了，请问这时候连接会断开吗？</p>
+<p>1.长短连接<br>是否断开我们需要区分HTTP版本：</p>
+<p>在HTTP/1.0版本的时候，客户端与服务器完成一个请求/响应之后，会将之前建立的TCP连接断开，下次请求的时候又要重新建立TCP连接，这也被称为短连接<br>在HTTP1.0发布仅半年后（1997年1月） ，HTTP/1.1版本发布并带来一个新的功能：在客户端与服务器完成一次请求/响应之后，允许不断开TCP连接，这意味着下次请求就直接使用这个TCP连接而不再需要重新握手建立新连接，这也被称为长连接<br>注意：长连接是指一次TCP连接允许多次HTTP会话，HTTP永远都是一次请求/响应，会话结束，HTTP本身不存在长连接之说。</p>
+<p>早在1999年HTTP1.1就推广普及，所以现在浏览器在请求时请求头中都会携带一个参数：Connection:keep-alive，这表示浏览器要求与服务器建立长连接，而服务器也可以设置是否愿意建立长连接。</p>
+<p>2.长连接优缺点<br>对于服务器来说建立长连接有优点也有缺点：</p>
+<p>优点：当网站中有大量静态资源（图片、css、js等）就可以开启长连接，这也几张图片就可以通过一次TCP连接发送。<br>缺点：当客户端请求一次时候不在请求，而服务器却开着长连接资源被占用着，这是严重浪费资源。<br>所以是否开启长连接，长连接时间都需要根据网站自身来合理设置。</p>
+<p>ps：大家不要小看这一个TCP连接，在一次客户端HTTP完整的请求中（DNS寻址、建立TCP连接、请求、等待、解析网页、断开TCP连接）建立TCP连接占用的时间比还是很大的。</p>
+<p>3.断开连接过程<br>在建立TCP连接时是三次握手，而断开TCP连接是四次挥手！<br><img src="./http-detail-13.jpg" alt="HTTP请求流程"></p>
+<p>在前面讲TCP/IP协议时我们说过标志位：FIN表示通知对方本端要关闭连接了，<strong>那断开连接为何需要四次挥手呢？</strong>这里给大家的课后作业，可以在留言中给出你的理解，看看是否正确。</p>
+<h3 id="七、题外话"><a href="#七、题外话" class="headerlink" title="七、题外话"></a>七、题外话</h3><p>1.面试必考题：http三次握手、四次挥手<br>面试官：为何建立连接需要三次握手而关闭连接却需要四次挥手。给大家的课后作业，在留言中给出你的见解！</p>
+<p>2.http2.0<br>图片描述<br>HTTP/1.1已经为我们服务了20年，而HTTP/2.0其实在2015就发布了，但是还没有推广开来，关于HTTP/2.0新特性大家也可以去网上查阅相关资料</p>
+<p>3.http&amp;rpc<br>因为http响应慢、请求头体积大等缺点，所以在微服务时代，大家都使用rpc来调用服务，rpc相关概念感兴趣同学自行网上学习。</p>
+<p>4.http&amp;https<br>http还有两个很大的缺点就是明文且不能保证完整性，所以目前会渐渐被HTTPS代替，HTTPS知识猪哥下期将会为大家讲解。</p>
+<h3 id="原文地址和作者信息"><a href="#原文地址和作者信息" class="headerlink" title="原文地址和作者信息"></a>原文地址和作者信息</h3><p>作者：猪哥66<br>链接：<a href="https://www.imooc.com/article/287873" target="_blank" rel="noopener">https://www.imooc.com/article/287873</a><br>来源：慕课网<br>本文原创发布于慕课网 ，转载请注明出处，谢谢合作</p>
+<h3 id="八、补充"><a href="#八、补充" class="headerlink" title="八、补充"></a>八、补充</h3><h4 id="TCP关闭连接过程："><a href="#TCP关闭连接过程：" class="headerlink" title="TCP关闭连接过程："></a>TCP关闭连接过程：</h4><p>1.Client向Server发送FIN包，表示Client主动要关闭连接，然后进入FIN_WAIT_1状态，等待Server返回ACK包。此后Client不能再向Server发送数据，但能读取数据。</p>
+<p>2.Server收到FIN包后向Client发送ACK包，然后进入CLOSE_WAIT状态，此后Server不能再读取数据，但可以继续向Client发送数据。</p>
+<p>3.Client收到Server返回的ACK包后进入FIN_WAIT_2状态，等待Server发送FIN包。</p>
+<p>4.Server完成数据的发送后，将FIN包发送给Client，然后进入LAST_ACK状态，等待Client返回ACK包，此后Server既不能读取数据，也不能发送数据。</p>
+<p>5.Client收到FIN包后向Server发送ACK包，然后进入TIME_WAIT状态，接着等待足够长的时间（2MSL）以确保Server接收到ACK包，最后回到CLOSED状态，释放网络资源。</p>
+<p>6.Server收到Client返回的ACK包后便回到CLOSED状态，释放网络资源。</p>
+<h4 id="为什么要四次挥手？"><a href="#为什么要四次挥手？" class="headerlink" title="为什么要四次挥手？"></a>为什么要四次挥手？</h4><p>TCP是全双工信道，何为全双工就是客户端与服务端建立两条通道，通道1:客户端的输出连接服务端的输入；通道2:客户端的输入连接服务端的输出。两个通道可以同时工作：客户端向服务端发送信号的同时服务端也可以向客户端发送信号。所以关闭双通道的时候就是这样：</p>
+<p>客户端：我要关闭输入通道了。<br>服务端：好的，你关闭吧，我这边也关闭这个通道。</p>
+<p>服务端：我也要关闭输入通道了。<br>客户端：好的你关闭吧，我也把这个通道关闭。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>javascript中的this指针分析</title>
+    <url>/2019/07/16/javascript%E4%B8%AD%E7%9A%84this%E6%8C%87%E9%92%88%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>this 一直是js中容易让初学者产生疑惑的一个点，本文将试图从js的底层，通过以下三个问题，来分析以下关于this指针的指向问题：</p>
+<ul>
+<li>为什么需要this</li>
+<li>为什么函数执行时的this指针指向不同</li>
+<li>this指针的指向判断规则和优先级</li>
+</ul>
+<a id="more"></a>
+<h3 id="为什么需要this"><a href="#为什么需要this" class="headerlink" title="为什么需要this"></a>为什么需要this</h3><p>在js中，函数在执行的时候，首先会需要传入的参数，用于变量引用查找，此外还需要作用域链，用于查找除了参数以外的，在可访问的作用域中的变量引用的查找，这两者是很比较显而易见的要素，比较容易理解。除此之外，还有一个要素就是this，或者说函数执行上下文，为什么需要这个上下文呢？查看以下代码：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">fun</span>(<span class="params">this</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">this</span>.a);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  a: <span class="string">'a in obj'</span>,</span><br><span class="line">  fun: fun,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> obj2 = &#123;</span><br><span class="line">  a: <span class="string">'a in obj2'</span>,</span><br><span class="line">  fun: fun,</span><br><span class="line">&#125;</span><br><span class="line">obj.fun(obj);</span><br><span class="line"></span><br><span class="line">obj2.fun(obj2)</span><br></pre></td></tr></table></figure>
+
+<p>上述定义了一个方法fun，并将其引用为obj中的一个方法，在调用obj.fun(obj)时，为了能访问到obj中的其他属性或方法，不得不显示的设置一个参数————this，同样obj2在使用fun方法时，也需要这样的一个实参，是不是看起来有点冗余？如果能直接通过调用obj.fun()和obj2.fun()，函数内部有个形参指向调用对象，代码会不会显得更加简洁？</p>
+<p>当然，这个理由可能无法说服你，就算每次调用对象的fun方法时传入一个实参，也没多大影响。然而在另一个场景中，确是不得不使用this。查看以下代码：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">DOG</span>(<span class="params">name</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">this</span>.name = name;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> myDog = <span class="keyword">new</span> DOG(<span class="string">'pony'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(myDog.name) <span class="comment">// pony</span></span><br></pre></td></tr></table></figure>
+
+<p>js中没有类的概念（ES6中添加的class关键字仅仅是一个语法糖），只有对象，在基于一个对象，实例化一个新对象的时候，除了继承原有的属性，如何通过引用新建实例对象，在新实例对象中添加新的属性呢？这时候this再次派上了用场，上述代码中，DOG在被new关键字调用，新建对象的时候，其中的this就会指向新建的对象，这样就可以在新对象中添加属性了。</p>
+<p>this关键字使得js项目具有可扩展性，提高了代码的复用性，而且在实现多范式时发挥了重要作用。</p>
+<h3 id="为什么函数执行时的this指针指向不同及规则判断"><a href="#为什么函数执行时的this指针指向不同及规则判断" class="headerlink" title="为什么函数执行时的this指针指向不同及规则判断"></a>为什么函数执行时的this指针指向不同及规则判断</h3><p>函数执行时的this指针指向不同的主要原因是函数的调用方式不同，总结而言，函数可以有以下4中情形的调用方式：</p>
+<ul>
+<li>情形一： 纯粹的函数调用</li>
+<li>情形二： 作为对象方法的调用</li>
+<li>情况三： 作为构造函数调用</li>
+<li>情况四： apply或call调用</li>
+</ul>
+<p>情形一和情形二应该是项目开发时最常见的调用方式了，如以下例子：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a = <span class="string">'window a'</span>;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">fun</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'foo'</span>, <span class="keyword">this</span>.a);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 例子一</span></span><br><span class="line"><span class="comment">// 情形一： 纯粹的函数调用</span></span><br><span class="line">foo(); <span class="comment">// this -&gt; window(在严格模式下指向undefined), 输出的是window.a =&gt; 'window a'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  a: <span class="string">'obj a'</span>,</span><br><span class="line">  foo: foo </span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 例子二</span></span><br><span class="line"><span class="comment">// 情形二： 作为对象方法的调用</span></span><br><span class="line">obj.foo();  <span class="comment">// this指向函数最近的对象，即this -&gt; obj，输出的是obj.a =&gt; 'obj a'</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 例子三</span></span><br><span class="line"><span class="comment">// 情形一： 纯粹的函数调用</span></span><br><span class="line"><span class="keyword">var</span> foo2 = obj.foo;</span><br><span class="line"></span><br><span class="line">foo2(); <span class="comment">//this -&gt; window(在严格模式下指向undefined), 输出的是window.a =&gt; 'window a'</span></span><br></pre></td></tr></table></figure>
+
+<p>在例子三中，可能会使很多人疑惑，obj.foo被赋值给变量foo2，在js中对象类型的变量是按引传递的，函数作为一种对象，此时foo2变量得到的是foo函数的引用，因此当foo2执行的时候，执行环境是window，this指向的是windowm，和foo作为函数调用的情形并没有差异。</p>
+<p>同时需要注意，即使foo函数定义在obj中，被赋值给foo2后，foo2得到的仍然是obj.foo对应函数的引用，this仍然指向window，如下面例子：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a = <span class="string">'window a'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  a: <span class="string">'obj a'</span>,</span><br><span class="line">  foo: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'foo'</span>, <span class="keyword">this</span>.a);</span><br><span class="line">  &#125; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> foo2 = obj.foo;</span><br><span class="line"></span><br><span class="line">foo2(); <span class="comment">//this -&gt; window(在严格模式下指向undefined), 输出的是window.a =&gt; 'window a'</span></span><br></pre></td></tr></table></figure>
+
+<p>如果不想在对象内引用函数，而想把this绑定到某个对象上，js提供了两种方法：call和apply，它们的第一个参数是一个对象，会把这个对象绑定到this，函数执行时指定这个this，这种方式称为显示绑定，如下面列子：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params">x, y</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'foo'</span>, <span class="keyword">this</span>.a);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  a: <span class="string">'obj a'</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// call 方式显示绑定</span></span><br><span class="line">foo.call(obj, <span class="number">1</span>, <span class="number">2</span>); <span class="comment">// this-&gt;obj,输出 'obj a'</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// apply 方式显示绑定</span></span><br><span class="line">foo.apply(obj, [<span class="number">1</span>, <span class="number">2</span>]); <span class="comment">// this-&gt;obj,输出 'obj a'</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>注意：</strong> <br></p>
+<ol>
+<li><p>如果第一个参数不是对象类型，会被转化成对象类型（也就是 new String(…)、new Boolean(…)或者new Number(…)），这通常被称为”装箱”。如果是null或者undefined，会指向window，严格模式下报错；</p>
+</li>
+<li><p>call的非第一个参数，作为参数传递个函数，apply的第二个参数是一个数组，会结构后传递给函数，这是两者之间的区别；</p>
+</li>
+<li><p>还有一种改变this的方式是使用bind，bind不同于call和apply，不会立即执行函数，但函数执行时候this指针会改变；</p>
+</li>
+</ol>
+<p>最后一种是作为构造函数调用的时候，也称为new 绑定，在这种情况下，会自动执行下面操作：</p>
+<ol>
+<li>创建一个全新的对象；</li>
+<li>这个对象被执行[[<strong>proto</strong>]]连接；</li>
+<li>这个新对象会绑定到函数调用的this；</li>
+<li>如果函数没有返回其他对象，那么new 表达式中的函数调用会自动放回这个新对象；</li>
+</ol>
+<p>这个过程的伪代码如下：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a = <span class="keyword">new</span> myFunction(<span class="string">"Li"</span>,<span class="string">"Cherry"</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">new</span> myFunction&#123;</span><br><span class="line">  <span class="keyword">var</span> obj = &#123;&#125;;</span><br><span class="line">  obj.__proto__ = myFunction.prototype;</span><br><span class="line">  <span class="keyword">var</span> result = myFunction.call(obj, <span class="string">"Li"</span>, <span class="string">"Cherry"</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">typeof</span> result === <span class="string">'obj'</span>? result : obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="规则判断优先级"><a href="#规则判断优先级" class="headerlink" title="规则判断优先级"></a>规则判断优先级</h3><p>现在我们可以根据优先级来判断函数在某个调用位置应用的是哪条规则。可以按照下面的<br>顺序来进行判断：</p>
+<ol>
+<li><p>函数是否在new中调用(new绑定)?如果是的话thts绑定的是新创建的对象。</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> bar = <span class="keyword">new</span> foo()</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>函数是否通过call、 apply(显式绑定)或者硬绑定调用?如果是的话,this绑定的是指定的对象。</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> bar = foo.call(obj2)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>函数是否在某个上下文对象中调用(隐式绑定)?如果是的话,this绑定的是那个上下文对象。</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> bar = obj1.food()</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如果都不是的话,使用默认绑定。如果在严格模式下,就绑定到 undefined,否则绑定到全局对象。</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> bar = foo()</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h3 id="补充说明"><a href="#补充说明" class="headerlink" title="补充说明"></a>补充说明</h3><h4 id="bind实现方式"><a href="#bind实现方式" class="headerlink" title="bind实现方式"></a>bind实现方式</h4><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span>(!<span class="built_in">Function</span>.prototype.bind) &#123;</span><br><span class="line">  <span class="built_in">Function</span>.prototype.bind = <span class="function"><span class="keyword">function</span>(<span class="params">oThis</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> <span class="keyword">this</span> !== <span class="string">'function'</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">TypeError</span>(<span class="string">"Function.prototype.bind - what is trying to be bound is not callable"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">var</span> aArgs = <span class="built_in">Array</span>.prototype.slice.call(<span class="built_in">arguments</span>, <span class="number">1</span>),</span><br><span class="line">    fToBind = <span class="keyword">this</span>,</span><br><span class="line">    fNOP = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;&#125;,</span><br><span class="line">    fBound = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> fToBind.apply(</span><br><span class="line">        <span class="keyword">this</span> <span class="keyword">instanceof</span> fNOP &amp;&amp; oThis ? <span class="keyword">this</span> : oThis,</span><br><span class="line">        aArgs.concat(<span class="built_in">Array</span>.prototype.slice.call(<span class="built_in">arguments</span>))</span><br><span class="line">      );</span><br><span class="line">    &#125;;</span><br><span class="line">  fNOP.prototype = <span class="keyword">this</span>.prototype;</span><br><span class="line">  fBound.prototype = <span class="keyword">new</span> fNOP();</span><br><span class="line">  <span class="keyword">return</span> fBound;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+      <tags>
+        <tag>javascript</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Spring Boot学习之项目模型分析</title>
+    <url>/2019/06/24/Spring-Boot%E5%AD%A6%E4%B9%A0%E4%B9%8B%E9%A1%B9%E7%9B%AE%E6%A8%A1%E5%9E%8B%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<p>前端的角色是面向用户，在开发时，更多的是以单个页面或者一个页面中的某部分为一个模块进行开发，同一个模块中，逻辑划分或者组件拆分不会很多；但在后端开发中，开发者所需要面对的情形则有些不同，需要面对的是各种增删改查的数据请求和对数据库的处理，在这个接收请求-&gt;处理数据-&gt;返回结果的过程中，需要考虑的则是入库数据的安全、操作数据的方式、返回数据的结果内容。</p>
+<a id="more"></a>
+<p>最近在学习Java Spring Boot的后端开发，借此机会，整理出在学习过程中的一些思考内部，记录和分享出来，如果对内容有任何问题和意见，请在下面留言。</p>
+<p>项目所采用的框架是现在比较流行的SpringBoot+MyBatis+MySQL，项目的业务背景是开发一个电商秒杀服务的后台，下面的例子也会以这个为需求背景。作为一个初学者，此处不会对框架进行深层次的分析。</p>
+<p><img src="./spring-boot%E6%A8%A1%E5%9E%8B.png" alt="spring-boot模型"></p>
+<p>一图胜千言，通过上面的图片，可以初步理解，后端代码中比较重要的模块有哪些，也可以看到一个请求的处理基本逻辑。</p>
+<p>服务端在接收到一个请求的时候，会由服务器转发到对应的控制器(Controller)下的方法，进行数据处理。</p>
+<p>而在每个Controller中，不会进行数据入库或者查询数据的操作，只对数据进行简单的处理，对应的操作数据库的任务，则由对应的模块服务(Service)进行处理，如用户管理(UserService)，商品管理(ItemService)等，项目中的Service是一个接口(Interface)类型的文件，具体实现在对应的服务实现(ServiceImpl)中进行。<!--TODO::: 为何这样设计????--></p>
+<p>因此，实际的代码中，看起来，Service只是进行了方法的定义，实际的实现逻辑在ServiceImpl，在ServiceImpl中，则是需要DOMapper，如果对数据库进行更新插入操作，DOMapper接收一个DO(DataObject)对象，查询操作也会返回一个DO，DO中的属性是和数据库中的字段是一一对应的。但是DO模型不会直接返回到Controller，而是转化成Model(领域模型)。</p>
+<p>Model是面向业务逻辑需要设计的一种模型，为了便于业务中的逻辑处理，而最终Controller返回给用户的，是VO(ViewObject，视图对象)，为了便于前端展示数据和逻辑处理需求，并且剪除不应展示给前端的数据，添加不同领域，但需要展示的数据，比如UserModel中，密码信息，不需要返回给前端，ItemModel中，商品库存在不同的DO中，但需要在VO中返回给前端。</p>
+<p>在经过上叙的流程后，Controller最终拿到VO，并返回给前端，完成一次请求。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>GraphQL Java上手[译]</title>
+    <url>/2019/06/14/GraphQL-Java%E4%B8%8A%E6%89%8B-%E8%AF%91/</url>
+    <content><![CDATA[<p><a href="https://www.graphql-java.com/" target="_blank" rel="noopener">GraphQL Java</a> 是使用Java server对GraphQL的实现。在GraphQL Java的Github账户中，有几个仓库，其中最重要的一个就是<a href="https://github.com/graphql-java/graphql-java" target="_blank" rel="noopener">GraphQL Java Engine</a>，这是所有其他功能的基础。</p>
+<a id="more"></a>
+<p>GraphQL Java Engine 本身仅关注查询条件的执行，不会处理和HTTP或者JSON相关的问题。因此，可以采用<a href="https://github.com/graphql-java/graphql-java-spring" target="_blank" rel="noopener">GraphQL Java Spring Boot</a>项目，通过Spring Boot把API暴露到HTTP层面。</p>
+<p>创建一个GraphQL Java server的主要步骤：</p>
+<ul>
+<li><ol>
+<li>定义一个GraphQL Schema</li>
+</ol>
+</li>
+<li><ol start="2">
+<li>定义查询返回的具体的数据</li>
+</ol>
+</li>
+</ul>
+<p>示例API：获取一本书的详情</p>
+<p>这里的示例API就是一个简单的获取一本书的详细信息。这不算是一个全面的API，但对于这篇示例文章来说够用了。</p>
+<h3 id="创建一个Spring-Boot应用"><a href="#创建一个Spring-Boot应用" class="headerlink" title="创建一个Spring Boot应用"></a>创建一个Spring Boot应用</h3><p>最简单的创建一个Spring Boot app的工具就是使用“Spring Initializr”网站的工具，在线生成：<a href="https://start.spring.io/" target="_blank" rel="noopener"> https://start.spring.io/</a>。</p>
+<p>选择以下选项：</p>
+<ul>
+<li>Gradle Project</li>
+<li>Java</li>
+<li>Spring Boot 2.1.x</li>
+</ul>
+<p>使用以下项目元信息：</p>
+<ul>
+<li>Group: com.graphql-java.tutorial</li>
+<li>Artifact: book-details</li>
+</ul>
+<p>项目的依赖，选择<strong>Web</strong>。</p>
+<p>然后点击 <strong>Generate Project</strong>就会下载一个可以启动的Spring Boot app了。接下来提到的文件和路径，都会和这个项目相关联。</p>
+<p>我们需要添加三个新的依赖到我们项目的<strong>buidl.gradle</strong>:</p>
+<p>第一个是GraphQL Java，第二个是GraphQL Java Spring，第三个是<a href="https://github.com/google/guava" target="_blank" rel="noopener">Google Guava</a>。Guava 不是必须的，但是可以使我们的开发简单点。</p>
+<p>添加后，项目依赖变成下面的样子：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    implementation <span class="string">'com.graphql-java:graphql-java:11.0'</span> <span class="comment">// NEW</span></span><br><span class="line">    implementation <span class="string">'com.graphql-java:graphql-java-spring-boot-starter-webmvc:1.0'</span> <span class="comment">// NEW</span></span><br><span class="line">    implementation <span class="string">'com.google.guava:guava:26.0-jre'</span> <span class="comment">// NEW</span></span><br><span class="line">    implementation <span class="string">'org.springframework.boot:spring-boot-starter-web'</span></span><br><span class="line">    testImplementation <span class="string">'org.springframework.boot:spring-boot-starter-test'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Schema"><a href="#Schema" class="headerlink" title="Schema"></a>Schema</h3><p>在<strong>src/main/resources</strong>文件夹下添加一个文件<strong>schema.graphql</strong>，复制以下内容到文件中：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">type Query &#123;</span><br><span class="line">  bookById(id: ID): Book </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type Book &#123;</span><br><span class="line">  id: ID</span><br><span class="line">  name: <span class="built_in">String</span></span><br><span class="line">  pageCount: Int</span><br><span class="line">  author: Author</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type Author &#123;</span><br><span class="line">  id: ID</span><br><span class="line">  firstName: <span class="built_in">String</span></span><br><span class="line">  lastName: <span class="built_in">String</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个schema定义了一个顶级值域（在type <strong>Query</strong>中）：<strong>bookById</strong>会返回一本书的详情。</p>
+<p>同时，其中也定义了 type <strong>Book</strong> 有下列值域：<strong>id</strong>、<strong>name</strong>、<strong>pageCount</strong>和<strong>anthor</strong>。<strong>author</strong>也是一个 type <strong>Author</strong>，定义在<strong>Book</strong>后面。</p>
+<blockquote>
+<p>上面用于描述schema的语言称为 Schema Definition Language 或者 SDL。更多文档查看<a href="https://graphql.org/learn/schema/" target="_blank" rel="noopener">这里</a>。</p>
+</blockquote>
+<p>现在有了这个文件，就需要通过读取这个文件来实现他，解析他，通过添加代码来加载数据。</p>
+<p>在package <strong>com.graphqljava.tutorial.bookdetails</strong> 中新建一个 <strong>GraphQLProvider</strong>class，在里面添加一个<strong>init</strong>方法，来创建 <strong>GraphQL</strong>实例：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GraphQLProvider</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> GraphQL graphQL;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> GraphQL <span class="title">graphQL</span><span class="params">()</span> </span>&#123; </span><br><span class="line">        <span class="keyword">return</span> graphQL;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@PostConstruct</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        URL url = Resources.getResource(<span class="string">"schema.graphqls"</span>);</span><br><span class="line">        String sdl = Resources.toString(url, Charsets.UTF_8);</span><br><span class="line">        GraphQLSchema graphQLSchema = buildSchema(sdl);</span><br><span class="line">        <span class="keyword">this</span>.graphQL = GraphQL.newGraphQL(graphQLSchema).build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> GraphQLSchema <span class="title">buildSchema</span><span class="params">(String sdl)</span> </span>&#123;</span><br><span class="line">      <span class="comment">// <span class="doctag">TODO:</span> we will create the schema here later </span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用Guava <strong>Resources</strong> 来读取这个文件，从类路径中，然后创建一个 <strong>GraphQLSchema</strong>和<strong>GraphQL</strong> 实例。这个 <strong>GraphQL</strong>实例通过<strong>@Bean</strong>注解 <strong>graphQL()</strong>方法暴露给Spring Bean。GraphQL Java Spring适配器会使用<strong>GraphQL</strong>实例将schema暴露给HTTP，默认路径是 <strong>/graphql</strong>。</p>
+<p>还需要做的是实现 <strong>buildSchema</strong>方法，来创建<strong>GraphQLSchema</strong>实例，链接代码查询数据：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line">GraphQLDataFetchers graphQLDataFetchers;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> GraphQLSchema <span class="title">buildSchema</span><span class="params">(String sdl)</span> </span>&#123;</span><br><span class="line">    TypeDefinitionRegistry typeRegistry = <span class="keyword">new</span> SchemaParser().parse(sdl);</span><br><span class="line">    RuntimeWiring runtimeWiring = buildWiring();</span><br><span class="line">    SchemaGenerator schemaGenerator = <span class="keyword">new</span> SchemaGenerator();</span><br><span class="line">    <span class="keyword">return</span> schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> RuntimeWiring <span class="title">buildWiring</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> RuntimeWiring.newRuntimeWiring()</span><br><span class="line">            .type(newTypeWiring(<span class="string">"Query"</span>)</span><br><span class="line">                    .dataFetcher(<span class="string">"bookById"</span>, graphQLDataFetchers.getBookByIdDataFetcher()))</span><br><span class="line">            .type(newTypeWiring(<span class="string">"Book"</span>)</span><br><span class="line">                    .dataFetcher(<span class="string">"author"</span>, graphQLDataFetchers.getAuthorDataFetcher()))</span><br><span class="line">            .build();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>TypeDefinitionRegistry</strong>是解析后的schema文件，<strong>SchemaGenerator</strong>将<strong>RuntimeWiring</strong>和<strong>RuntimeWiring</strong>结合，最终生成<strong>GraphQLSchema</strong>。</p>
+<p><strong>buildRuntimeWiring</strong>使用<strong>graphQLDataFetchers</strong>bean来注册两个<strong>DataFetcher</strong>：</p>
+<ul>
+<li>一个取回书信息通过一个ID</li>
+<li>一个用来查询书的作者信息</li>
+</ul>
+<p><strong>DataFetcher</strong>和如何实现<strong>GraphQLDataFetchers</strong> bean在下章讲解。</p>
+<p>最终这个过程创建一个 <strong>GraphQL</strong>和一个 <strong>GraphQLSchema</strong>实例，如下图：</p>
+<p><img src="./graphql-schema.png" alt="graphql"></p>
+<h3 id="DataFetchers"><a href="#DataFetchers" class="headerlink" title="DataFetchers"></a>DataFetchers</h3><p>GraphQL Java服务最重要的部分可能就是<strong>DataFetcher</strong>了：<strong>DataFetcher</strong>会在查询执行的时候，从一个field获取数据。</p>
+<p>GraphQL Java 执行一个查询的时候，会对其中的每一个field调用对应的<strong>DataFetcher</strong>。一个<strong>*DataFetcher</strong>就是一个Interface(Java 接口)，里面只有一个方法，对应的一个<strong>DataFetcherEnvironment</strong>类型的参数：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">DataFetcher</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="function">T <span class="title">get</span><span class="params">(DataFetchingEnvironment dataFetchingEnvironment)</span> <span class="keyword">throws</span> Exception</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意：schema中的<strong>每一个</strong>field都有一个<strong>DataFetcher</strong>与之关。如果你没有指定field对应的任何<strong>DataFetcher</strong>，会使用默认的<strong>PropertyDataFetcher</strong>。更多的细节会在更多详情中加以讨论。</p>
+<p>现在创建一个class <strong>GraphQLDataFethcers</strong>，包含一个简单的书籍列表和作者列表。</p>
+<p>文件内容如下，其中的细节在下面会加以说明：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GraphQLDataFetchers</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> List&lt;Map&lt;String, String&gt;&gt; books = Arrays.asList(</span><br><span class="line">            ImmutableMap.of(<span class="string">"id"</span>, <span class="string">"book-1"</span>,</span><br><span class="line">                    <span class="string">"name"</span>, <span class="string">"Harry Potter and the Philosopher's Stone"</span>,</span><br><span class="line">                    <span class="string">"pageCount"</span>, <span class="string">"223"</span>,</span><br><span class="line">                    <span class="string">"authorId"</span>, <span class="string">"author-1"</span>),</span><br><span class="line">            ImmutableMap.of(<span class="string">"id"</span>, <span class="string">"book-2"</span>,</span><br><span class="line">                    <span class="string">"name"</span>, <span class="string">"Moby Dick"</span>,</span><br><span class="line">                    <span class="string">"pageCount"</span>, <span class="string">"635"</span>,</span><br><span class="line">                    <span class="string">"authorId"</span>, <span class="string">"author-2"</span>),</span><br><span class="line">            ImmutableMap.of(<span class="string">"id"</span>, <span class="string">"book-3"</span>,</span><br><span class="line">                    <span class="string">"name"</span>, <span class="string">"Interview with the vampire"</span>,</span><br><span class="line">                    <span class="string">"pageCount"</span>, <span class="string">"371"</span>,</span><br><span class="line">                    <span class="string">"authorId"</span>, <span class="string">"author-3"</span>)</span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> List&lt;Map&lt;String, String&gt;&gt; authors = Arrays.asList(</span><br><span class="line">            ImmutableMap.of(<span class="string">"id"</span>, <span class="string">"author-1"</span>,</span><br><span class="line">                    <span class="string">"firstName"</span>, <span class="string">"Joanne"</span>,</span><br><span class="line">                    <span class="string">"lastName"</span>, <span class="string">"Rowling"</span>),</span><br><span class="line">            ImmutableMap.of(<span class="string">"id"</span>, <span class="string">"author-2"</span>,</span><br><span class="line">                    <span class="string">"firstName"</span>, <span class="string">"Herman"</span>,</span><br><span class="line">                    <span class="string">"lastName"</span>, <span class="string">"Melville"</span>),</span><br><span class="line">            ImmutableMap.of(<span class="string">"id"</span>, <span class="string">"author-3"</span>,</span><br><span class="line">                    <span class="string">"firstName"</span>, <span class="string">"Anne"</span>,</span><br><span class="line">                    <span class="string">"lastName"</span>, <span class="string">"Rice"</span>)</span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataFetcher <span class="title">getBookByIdDataFetcher</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> dataFetchingEnvironment -&gt; &#123;</span><br><span class="line">            String bookId = dataFetchingEnvironment.getArgument(<span class="string">"id"</span>);</span><br><span class="line">            <span class="keyword">return</span> books</span><br><span class="line">                    .stream()</span><br><span class="line">                    .filter(book -&gt; book.get(<span class="string">"id"</span>).equals(bookId))</span><br><span class="line">                    .findFirst()</span><br><span class="line">                    .orElse(<span class="keyword">null</span>);</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataFetcher <span class="title">getAuthorDataFetcher</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> dataFetchingEnvironment -&gt; &#123;</span><br><span class="line">            Map&lt;String,String&gt; book = dataFetchingEnvironment.getSource();</span><br><span class="line">            String authorId = book.get(<span class="string">"authorId"</span>);</span><br><span class="line">            <span class="keyword">return</span> authors</span><br><span class="line">                    .stream()</span><br><span class="line">                    .filter(author -&gt; author.get(<span class="string">"id"</span>).equals(authorId))</span><br><span class="line">                    .findFirst()</span><br><span class="line">                    .orElse(<span class="keyword">null</span>);</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="数据源"><a href="#数据源" class="headerlink" title="数据源"></a>数据源</h3><p>下面将会从这个类的数组中获取静态的书籍和作者数据。这个只是为了演示用。当然，有一点必须很明确，GraphQL不过关心数据来自于哪里。GraphQL可以从内存中的数组中，从数据库或者其他服务获取数据。</p>
+<h3 id="Book-DataFetcher"><a href="#Book-DataFetcher" class="headerlink" title="Book DataFetcher"></a>Book DataFetcher</h3><p>我们的第一个方法<strong>getBookByIdDataFetcher</strong>返回一个<strong>DataFetcher</strong>的实现，<strong>DataFetcher</strong>有一个入参 <strong>DataFetcherEnvironment</strong>，并返回书籍内容。在我们的例子中，就是说我们需要从 <strong>bookById</strong>filed中拿到 <strong>id</strong>参数，然后通过这个<strong>id</strong>找到这本书的详细信息。如果没找到相关信息，会返回null。</p>
+<p><strong>String bookId = dataFetchingEnvironment.getArgument(“id”);</strong>中的”id” 就是从schema里的<strong>bookById</strong>field。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">type Query &#123;</span><br><span class="line">  bookById(id: ID): Book </span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h3 id="Author-DataFetcher"><a href="#Author-DataFetcher" class="headerlink" title="Author DataFetcher"></a>Author DataFetcher</h3><p>我们的第二个方法<strong>getAuthorDataFetcher</strong>，返回<strong>DataFetcher</strong>用于书籍对应的作者信息。对比上面提到的书籍的<strong>DataFetcher</strong>，这个地方没有参数，但是有一个书籍的instance(实例)。从父field的<strong>DataFetcher</strong>的结果可以通过<strong>getSource</strong>获取。这里有一个重要的概念：filed对应的<strong>DataFetcher</strong>方法是自上而下的执行，子孙的<strong>DataFetcherEnvironment</strong>的<strong>source</strong>属性对应着祖先的结果。</p>
+<p>然后我们可以通过已经获取到的书籍信息，获取到<strong>authorId</strong>，然后以和查询书籍信息相同的方式查询作者信息。</p>
+<h3 id="Default-DataFetchers"><a href="#Default-DataFetchers" class="headerlink" title="Default DataFetchers"></a>Default DataFetchers</h3><p>我们只实现了两个<strong>DataFetchers</strong>。如上面提到的，如果你不指定对应的 <strong>DataFetcher</strong>，会使用默认的<strong>PropertyDataFetcher</strong>。在这个例子中，就是说 <strong>Book.id</strong>，<strong>Book.name</strong>，<strong>Book.pageCount</strong>，<strong>Author.id</strong>，<strong>Author.firstName</strong>，<strong>Author.lastName</strong>都使用的是 <strong>PropertyDataFetcher</strong>。</p>
+<p><strong>PropertyDataFetcher</strong> 尝试使用多种方式来查询Java object 的属性。比说 <strong>java.util.Map</strong>，他会简单的通过key的方式查询。这种方式在这个项目中可以正常使用，因为书籍和作者Maps和schema中定义的filed是一样的。举个例子，在schema中，我们定义了书籍的field <strong>pageCount</strong>，书籍的<strong>DataFetcher</strong>就会返回一个带有 <strong>pageCount</strong>key的Map结构。因为field的名字和<strong>Map</strong>中pageCount的key(键)是一样的，所以<strong>PropertyDataFetcher</strong>就能正常使用。</p>
+<p>现在假设另外一种情形，我们定在book <strong>Map</strong>中定义了另外一个key <strong>totalPage</strong>，而不是之前的<strong>pageCount</strong>，这时就会返回book中的 <strong>pageCount</strong>为null，因为<strong>PropertyDataFetcher</strong>不能获取正确的值。为了修复这个问题，你得在为<strong>Book.pageCount</strong>注册一个新的 <strong>DataFetcher</strong>，像下面这样：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">    <span class="comment">// In the GraphQLProvider class</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> RuntimeWiring <span class="title">buildWiring</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> RuntimeWiring.newRuntimeWiring()</span><br><span class="line">                .type(newTypeWiring(<span class="string">"Query"</span>)</span><br><span class="line">                        .dataFetcher(<span class="string">"bookById"</span>, graphQLDataFetchers.getBookByIdDataFetcher()))</span><br><span class="line">                .type(newTypeWiring(<span class="string">"Book"</span>)</span><br><span class="line">                        .dataFetcher(<span class="string">"author"</span>, graphQLDataFetchers.getAuthorDataFetcher())</span><br><span class="line">                        <span class="comment">// This line is new: we need to register the additional DataFetcher</span></span><br><span class="line">                        .dataFetcher(<span class="string">"pageCount"</span>, graphQLDataFetchers.getPageCountDataFetcher()))</span><br><span class="line">                .build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// In the GraphQLDataFetchers class</span></span><br><span class="line">    <span class="comment">// Implement the DataFetcher</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataFetcher <span class="title">getPageCountDataFetcher</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> dataFetchingEnvironment -&gt; &#123;</span><br><span class="line">            Map&lt;String,String&gt; book = dataFetchingEnvironment.getSource();</span><br><span class="line">            <span class="keyword">return</span> book.get(<span class="string">"totalPages"</span>);</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>这个<strong>DataFetcher</strong>就是修复这个问题，通过查询book <strong>Map</strong>中正确的 key。（重申一遍：在这个例子中，我们不需要这个，因为我们的键是对应的）</p>
+<h3 id="尝试一下接口"><a href="#尝试一下接口" class="headerlink" title="尝试一下接口"></a>尝试一下接口</h3><p>上面你就完成了创建一个可以使用的GraphQL API。启动Spring Boot 应用后，访问<strong><a href="http://localhost:8080/graphql" target="_blank" rel="noopener">http://localhost:8080/graphql</a></strong>试下。</p>
+<p>最简单的尝试和探索GraphQL API的方式就是使用一些工具，如 <a href="https://github.com/prisma/graphql-playground" target="_blank" rel="noopener"><strong>GraphQL Playground</strong></a>。下载然后运行它。</p>
+<p>启动后，在GraphQL Playground中访问<a href="http://localhost:8080/graphql" target="_blank" rel="noopener">http://localhost:8080/graphql</a>。</p>
+<p>然后你就可以查看我们的示例API，可以获取到上面提到的结果。结果应该像下面这样：</p>
+<p><img src="./graphql-demo.png" alt="graphql-demo.png"></p>
+<h3 id="完整的示例代码和更多信息"><a href="#完整的示例代码和更多信息" class="headerlink" title="完整的示例代码和更多信息"></a>完整的示例代码和更多信息</h3><p>项目完整的代码在这里：<a href="https://github.com/graphql-java/tutorials/tree/master/book-details" target="_blank" rel="noopener">https://github.com/graphql-java/tutorials/tree/master/book-details</a>。</p>
+<p>更多关于GraphQL Java 的文档地址：<a href="https://www.graphql-java.com/documentation/" target="_blank" rel="noopener">https://www.graphql-java.com/documentation/</a>。</p>
+<p>在这里可以提出任何问题：<a href="https://spectrum.chat/graphql-java" target="_blank" rel="noopener">spectrum chat</a>。</p>
+<p>想要直接的回复，可以在 Twitter <a href="https://twitter.com/graphql_java" target="_blank" rel="noopener">@GraphQL Java Twitter account</a>。</p>
+<blockquote>
+<p>Note: graphql的接口不能用一般的http请求加载，可以先用GraphQL Playground 进行测试，<a href="https://github.com/prisma/graphql-playground/releases" target="_blank" rel="noopener">下载链接</a></p>
+</blockquote>
+]]></content>
+  </entry>
+  <entry>
+    <title>从一个需求开始学babel插件开发</title>
+    <url>/2019/05/23/%E4%BB%8E%E4%B8%80%E4%B8%AA%E9%9C%80%E6%B1%82%E5%BC%80%E5%A7%8B%E5%AD%A6babel%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91/</url>
+    <content><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>基于现在JS这门语言快速发展的现状，很多还处于<a href="https://github.com/tc39/proposals" target="_blank" rel="noopener">TC39 提案</a>的新语法，或者已经写入新的语言规则的语法提案但在浏览器的支持度上不是十分普及， 以及JS的运行环境，也就是用户的浏览器碎片化的分布，无法保证我们在开发过程中写的JS代码在客户端一致正常的运行，这种情况肯定是不能接受的。</p>
+<p>而这正是Babel存在的价值，Babel可以把新的语法编译成能在不同浏览器中运行一致的兼容语法。开发者可以尽情的享受新的语法在开发中带来的爽快，如使用React的jsx语法，ES6的模块方案，class，箭头函数等，而在生产环境中只需要按照需求，配置好Babel的presets和plugins等配置，把项目代码编译成生产代码就可以了。</p>
+<p>因此了解一些Babel插件的编写方法绝对是有必要的。</p>
+<a id="more"></a>
+
+<h3 id="需求"><a href="#需求" class="headerlink" title="需求"></a>需求</h3><p>通常，我们使用Babel是在node的环境下，在项目代码运行前就按照一定的配置将代码编译打包好，但这次需要在客户端实时的将用户输入的代码编译成可运行的代码，而其中有一类代码是模块引入的代<br>码，代码编译成浏览器端的属性读取代码， 例如:</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; prop &#125; <span class="keyword">from</span> <span class="string">'modules'</span>;</span><br></pre></td></tr></table></figure>
+
+<p>编译成 </p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> &#123; prop &#125; = <span class="built_in">window</span>[<span class="string">'modules'</span>];</span><br></pre></td></tr></table></figure>
+
+<p>因此就需要用一个插件来执行这种编译操作；</p>
+<h3 id="实现方式"><a href="#实现方式" class="headerlink" title="实现方式"></a>实现方式</h3><ol>
+<li>通过Google的 (CDN)[<a href="https://unpkg.com/]" target="_blank" rel="noopener">https://unpkg.com/]</a> ，在页面的script标签中加载Babel包，如下 ：</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line">&lt;script src=<span class="string">"https://unpkg.com/@babel/standalone/babel.min.js"</span>&gt;&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<p>  这样在浏览器的window全局对象里，就会注册一个Babel对象，在这个对象中，有包含transform（编译）、registerPlugin（注册插件）、registerPreset（注册preset）等方法，而在这个需求中，所需要的就是 transform 和 registerPlugin 两个方法了。</p>
+<ol start="2">
+<li>接下来就是在Babel里面注册一个插件，主要功能是在 Visitors（访问者）“进入”一个节点时，如果是”ImportDeclaration”节点，即引入包的语法，将会进行处理，将该语句替换成属性读取的方式。代码如下：</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line">Babel.registerPlugin(<span class="string">"babel-module"</span>, <span class="function"><span class="keyword">function</span> (<span class="params">babel</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> t = babel.types; <span class="comment">// AST模块</span></span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    visitor: &#123;</span><br><span class="line">      ImportDeclaration(path) &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; node &#125; = path;</span><br><span class="line">        <span class="keyword">const</span> &#123;</span><br><span class="line">          objectPattern,</span><br><span class="line">          objectProperty,</span><br><span class="line">          variableDeclaration,</span><br><span class="line">          variableDeclarator</span><br><span class="line">        &#125; = t;</span><br><span class="line">        <span class="keyword">var</span> specifiers = node.specifiers.filter(</span><br><span class="line">          specifier =&gt; specifier.type === <span class="string">"ImportSpecifier"</span></span><br><span class="line">        );</span><br><span class="line">        <span class="keyword">var</span> memberExp = t.memberExpression(</span><br><span class="line">          t.identifier(<span class="string">"window"</span>),</span><br><span class="line">          node.source,</span><br><span class="line">          <span class="literal">true</span></span><br><span class="line">        ); <span class="comment">// 成员表达式</span></span><br><span class="line">        <span class="keyword">var</span> varDeclare = variableDeclaration(<span class="string">"var"</span>, [</span><br><span class="line">          variableDeclarator(</span><br><span class="line">            objectPattern(</span><br><span class="line">              specifiers.map(<span class="function"><span class="params">specifier</span> =&gt;</span></span><br><span class="line">                objectProperty(</span><br><span class="line">                  specifier.local,</span><br><span class="line">                  specifier.local,</span><br><span class="line">                  <span class="literal">false</span>,</span><br><span class="line">                  <span class="literal">true</span></span><br><span class="line">                )</span><br><span class="line">              )</span><br><span class="line">            ),</span><br><span class="line">            memberExp</span><br><span class="line">          )</span><br><span class="line">        ]);</span><br><span class="line">        path.replaceWith(varDeclare);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>注册完插件后，就可以利于用Babel里的transform方法和刚才的插件，来进行编译了，除了注册的插件以外，还可以利用babel内置的其他插件和preset，如下：</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="built_in">window</span>.Babel.transform(sourceCode, &#123;</span><br><span class="line">        presets: [<span class="string">'react'</span>],</span><br><span class="line">        plugins: [<span class="string">'babel-module'</span>, <span class="string">'proposal-class-properties'</span>],</span><br><span class="line">        ast: <span class="literal">true</span>,</span><br><span class="line">      &#125;).code</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：plugins和presets的执行顺序<br></p>
+<ul>
+<li>plugin在preset前执行</li>
+<li>plugin是从前到后依次执行，即写在前面的先执行</li>
+<li>preset是从后到前依次执行，即写在后面的先执行</li>
+</ul>
+</blockquote>
+<ol start="4">
+<li>这样就完成了一个在客户端注册babel插件的过程，在项目中使用自定义的Babel插件方式大同小异，在配置中加上presets和plugins的参数就可以了，参数可以是npm包的名字，也可以是本地文件的相对或者绝对路径，具体参考Babel文档中的 <a href="https://babel.docschina.org/docs/en/plugins#plugin-preset-paths" target="_blank" rel="noopener"><strong>pulgins/presets Path</strong></a></li>
+</ol>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
+<li><p>babel插件开发手册 <a href="https://github.com/jamiebuilds/babel-handbook/blob/master/translations/zh-Hans/plugin-handbook.md#builders" target="_blank" rel="noopener">中文版</a> <a href="https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md" target="_blank" rel="noopener">英文版</a></p>
+</li>
+<li><p>查看AST和节点对应关系 <a href="https://astexplorer.net/" target="_blank" rel="noopener">在线结果网站</a></p>
+</li>
+</ul>
+]]></content>
+  </entry>
+</search>

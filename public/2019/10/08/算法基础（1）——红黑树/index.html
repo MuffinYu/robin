@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.1">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.1" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.1">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.4.1',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="红黑树(Red-Black Tree，简称R-B Tree)，它一种特殊的二叉查找树。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法基础（1）——红黑树">
+<meta property="og:url" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/index.html">
+<meta property="og:site_name" content="Robin&#39;s blog">
+<meta property="og:description" content="红黑树(Red-Black Tree，简称R-B Tree)，它一种特殊的二叉查找树。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-1.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-2.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-3.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-4.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-5.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-6.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-7.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-8.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-9.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-10.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-11.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-15.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-12.png">
+<meta property="og:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-13.png">
+<meta property="og:updated_time" content="2019-10-16T11:00:49.659Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="算法基础（1）——红黑树">
+<meta name="twitter:description" content="红黑树(Red-Black Tree，简称R-B Tree)，它一种特殊的二叉查找树。">
+<meta name="twitter:image" content="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/red-black-tree-1.png">
+  <link rel="canonical" href="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>算法基础（1）——红黑树 | Robin's blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Robin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">一起学点东西～</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+        
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+      
+    
+      
+      
+        
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      
+    
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger">
+          <i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+    
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/MuffinYu/robin" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.muffinyu.com/2019/10/08/算法基础（1）——红黑树/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Robin">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Robin's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            算法基础（1）——红黑树
+            <a href="https://github.com/user-name/repo-name/tree/branch-name/subdirectory-name_posts/算法基础（1）——红黑树.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil"></i></a>
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-10-08 17:33:33" itemprop="dateCreated datePublished" datetime="2019-10-08T17:33:33+08:00">2019-10-08</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-16 19:00:49" itemprop="dateModified" datetime="2019-10-16T19:00:49+08:00">2019-10-16</time>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>红黑树(Red-Black Tree，简称R-B Tree)，它一种特殊的二叉查找树。</p>
+<a id="more"></a>
+
+<h3 id="一、红黑树介绍"><a href="#一、红黑树介绍" class="headerlink" title="一、红黑树介绍"></a>一、红黑树介绍</h3><h4 id="1-基本定义"><a href="#1-基本定义" class="headerlink" title="1. 基本定义"></a>1. 基本定义</h4><p>红黑树(Red-Black Tree，简称R-B Tree)，它一种特殊的二叉查找树。</p>
+<p>红黑树是特殊的二叉查找树，意味着它满足二叉查找树的特征：任意一个节点所包含的键值，大于等于左孩子的键值，小于等于右孩子的键值。</p>
+<p>红黑树区别于普通话二叉树在于每个节点上都有存储位表示节点的颜色，颜色是红(Red)或黑(Black)。</p>
+<p>同时节点颜色有以下的特性:<br>(1) 每个节点或者是黑色，或者是红色。<br>(2) 根节点是黑色。<br>(3) 每个叶子节点是黑色。 [注意：这里叶子节点，是指为空的叶子节点！]<br>(4) 如果一个节点是红色的，则它的子节点必须是黑色的。[一条线上不会出现两个及以上连续的红色节点，可能出现连续黑色节点]<br>(5) 从一个节点到该节点的子孙节点的所有路径上包含相同数目的黑节点。</p>
+<p>在二叉树和上述五个特性的限制下，从根节点到叶子节点的最长路径不多于最短路径的两倍。二叉树在极端情况下会退化成链表，此时查询的复杂度为O(n)，就没有了二叉树的特性减少时间复杂度的特点，如下图右侧，但红黑树会保证每个分枝的长度不会相差太多，确保时间性能在O(logN)左右。</p>
+<p><img src="./red-black-tree-1.png" alt="红黑树和二叉树"></p>
+<h4 id="2-引理"><a href="#2-引理" class="headerlink" title="2. 引理"></a>2. 引理</h4><ul>
+<li>2.1 一个有n个节点的红黑树高度至多为2lg(n+1)<!-- -  -->
+
+</li>
+</ul>
+<h3 id="二、红黑树构建"><a href="#二、红黑树构建" class="headerlink" title="二、红黑树构建"></a>二、红黑树构建</h3><p>红黑树的构建关键在于，添加和节点后，需要经过变色和旋转调整，以满足红黑树的五点要求，但不是每次添加节点都需要变色和旋转，需要判断不同情形，下面先介绍红黑树添加节点的情况处理：</p>
+<p>为方便上下文结合代码理解，这里先给出基本的节点和树的代码：</p>
+<ul>
+<li>节点颜色</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// NodeColor.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NodeColor</span> </span>&#123;</span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">static</span> String Red = <span class="string">"red"</span>;</span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">static</span> String Black = <span class="string">"black"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>节点（使用lombok注解，省去了构造方法和getter，setter方法）</li>
+</ul>
+<p><strong>注意：</strong>空节点的默认颜色为黑色，新添加节点的默认颜色为红色</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RedBlackTreeNode.java</span></span><br><span class="line"><span class="keyword">import</span> lombok.*;</span><br><span class="line"></span><br><span class="line"><span class="meta">@AllArgsConstructor</span></span><br><span class="line"><span class="meta">@NoArgsConstructor</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedBlackTreeNode</span> </span>&#123;</span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> String color = NodeColor.Black;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">int</span> key = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> RedBlackTreeNode left;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> RedBlackTreeNode right;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> RedBlackTreeNode parent;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RedBlackTree.java</span></span><br><span class="line"><span class="keyword">import</span> lombok.Getter;</span><br><span class="line"><span class="keyword">import</span> lombok.Setter;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedBlackTree</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 空节点</span></span><br><span class="line"><span class="comment">    * 默认颜色为黑色</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">static</span> RedBlackTreeNode nil = <span class="keyword">new</span> RedBlackTreeNode();</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 记录根节点</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="meta">@Getter</span></span><br><span class="line">   <span class="meta">@Setter</span></span><br><span class="line">   <span class="keyword">private</span> RedBlackTreeNode root = <span class="keyword">new</span> RedBlackTreeNode();</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 构造空树</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="title">RedBlackTree</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      root = nil;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 生成一个新节点，默认颜色为红色</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> key</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> RedBlackTreeNode <span class="title">RB_NODE</span><span class="params">(<span class="keyword">int</span> key)</span> </span>&#123;</span><br><span class="line">      RedBlackTreeNode node = <span class="keyword">new</span> RedBlackTreeNode(NodeColor.Red, key, nil, nil, nil);</span><br><span class="line">      <span class="keyword">return</span> node;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 判断节点是否为空</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> node</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">IsNil</span><span class="params">(RedBlackTreeNode node)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (node == nil) &#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">      &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="（1）、添加节点"><a href="#（1）、添加节点" class="headerlink" title="（1）、添加节点"></a>（1）、添加节点</h4><ol>
+<li><p>首先找到节点的添加位置，插入节点</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 插入节点</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> T</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> z</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">RB_INSERT</span><span class="params">(RedBlackTree T, RedBlackTreeNode z)</span> </span>&#123;</span><br><span class="line">   <span class="comment">// 临时变量节点y,存储临时节点，默认为nil</span></span><br><span class="line">   RedBlackTreeNode y = RedBlackTree.nil;</span><br><span class="line">   <span class="comment">// 获取根节点，从根节点开始遍历查询</span></span><br><span class="line">   RedBlackTreeNode x = T.getRoot();</span><br><span class="line">   <span class="comment">// 循环二分查找合适的插入点</span></span><br><span class="line">   <span class="keyword">while</span> (IsNil(x) == <span class="keyword">false</span>) &#123;</span><br><span class="line">      <span class="comment">// 保存当前节点，作为结果的根节点</span></span><br><span class="line">      y = x;</span><br><span class="line">      <span class="keyword">if</span> (z.getKey() &lt; x.getKey())&#123;</span><br><span class="line">         <span class="comment">// 添加节点值小于节点的值，查找左子树</span></span><br><span class="line">         x = x.getLeft();</span><br><span class="line">      &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="comment">// 添加节点值大于节点的值，查找右子树</span></span><br><span class="line">         x = x.getRight();</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// 临时节点y设置为插入点的父节点</span></span><br><span class="line">   z.setParent(y);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> (IsNil(y) == <span class="keyword">true</span>) &#123;</span><br><span class="line">      <span class="comment">// 空树时设置z为根节点</span></span><br><span class="line">      T.setRoot((z));</span><br><span class="line">   &#125;<span class="keyword">else</span> <span class="keyword">if</span> (z.getKey() &lt; y.getKey())&#123;</span><br><span class="line">      <span class="comment">// 新节点为左子节点</span></span><br><span class="line">      y.setLeft(z);</span><br><span class="line">   &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// 新节点为右子节点</span></span><br><span class="line">      y.setRight(z);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// 将插入节点的左右子树设为nil，颜色为红色，已经在构造时设置过，可以省略</span></span><br><span class="line">   z.setLeft(RedBlackTree.nil);</span><br><span class="line">   z.setRight(RedBlackTree.nil);</span><br><span class="line">   z.setColor(NodeColor.Red);</span><br><span class="line">   <span class="comment">// 插入调整</span></span><br><span class="line">   RB_INSERT_FIXUP(T, z);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>根据不同情况，进行变色和旋转</p>
+</li>
+<li><p>1 插入情况总结</p>
+</li>
+</ol>
+<ul>
+<li><p><strong>情况1：</strong>如果是根节点，直接插入就完事了（插入还是默认为红色，然后在代码的最后把根目录设置为黑色）</p>
+</li>
+<li><p><strong>情况2：</strong>插入节点的父亲为黑色，也一样，插入就完事了，不用做任何的改动</p>
+</li>
+<li><p><strong>情况3：</strong>插入节点的父亲为红色，叔叔节点（插入节点的爷爷的另一个子节点）的颜色也是红色</p>
+</li>
+<li><p><strong>情况4：</strong>插入节点的父亲为红色，叔叔节点节点为黑色</p>
+<p>情况4最麻烦，因为需要再做一次判断，</p>
+</li>
+</ul>
+<p>  <strong>（爷爷节点用G表示，父：F，叔叔：U，插入节点：M）</strong></p>
+<p>  注意，下面四张图U节点都是Nil节点（也就是一个不存在的节点，根据红黑树的特点，这个节点的颜色也是黑色），下图中画出来是为了便于理解。</p>
+<p><img src="./red-black-tree-2.png" alt="F是左节点，M是右节点"><br><img src="./red-black-tree-3.png" alt="F是左节点，M是左节点"><br><img src="./red-black-tree-4.png" alt="F是右节点，M是左节点"><br><img src="./red-black-tree-5.png" alt="F是右节点，M是右节点"></p>
+<p>四张图从左到右，从上到下：</p>
+<p>图1：父节点是爷爷节点左节点，插入节点是父节点的右节点；<br>图2：父节点是爷爷节点左节点，插入节点是父节点的左节点；<br>图3：父节点是爷爷节点右节点，插入节点是父节点的左节点；<br>图4：父节点是爷爷节点右节点，插入节点是父节点的右节点；</p>
+<p>四种情况总结来说，主要是<strong>爷爷节点、爸爸节点和插入节点是否是三点一线</strong>，如果不是三点一线，如图1和图3，就属于情况4的阶段1；如果是三点一线，如图2和图4，就属于情况4的阶段2。</p>
+<p>阶段1和阶段2有什么联系吗？阶段1的处理方式，就是经过旋转变成阶段2后，再做阶段2的旋转处理。</p>
+<p>2.2 插入情况处理</p>
+<p>情况1：表示插入的根节点，直接把新节点的红色变成黑色就可以了。</p>
+<p>情况2：父节点是黑色，直接插入，不做任何旋转和变色处理。</p>
+<p>情况3：父节点是红色，叔叔节点也是红色，直接把叔叔节点和父节点的颜色变成黑色，爷爷节点变成红色，并由爷爷节点继续上溯判断，爷爷节点的父节点颜色，做类似的处理。（因为太爷爷节点可能为红色，将爷爷节点变成红色，可能会和特性4冲突，必须向上继续判断）。</p>
+<p>情况4：父节点是红色，叔叔节点是黑色，这种情况较为复杂，先判断处于那个阶段。</p>
+<ul>
+<li>如果符合阶段1，图1和图3情形，图1就对F节点做左旋，图3就对F节点右旋，如下图，经过旋转，变成阶段2，即插入节点、父节点和爷爷节三点一线。</li>
+</ul>
+<p><img src="./red-black-tree-6.png" alt="F是左节点，M是右节点，F左旋"><br><img src="./red-black-tree-7.png" alt="F是右节点，M是左节点，F右旋"></p>
+<ul>
+<li>如果符合阶段2，图2和图4情形，图2就对G节点右旋，然后将G变为红色，如下图：</li>
+</ul>
+<p><img src="./red-black-tree-8.png" alt="F是左节点，M是左节点，G右旋，F黑色，G红色"><br><img src="./red-black-tree-9.png" alt="F是右节点，M是右节点，G左旋，F黑色，G红色"></p>
+<ol start="3">
+<li><p>代码实现</p>
+<p>综合上述的不同场景，整体逻辑流程总结如下图：</p>
+</li>
+</ol>
+<p><img src="./red-black-tree-10.png" alt="逻辑流程图"></p>
+<p>  具体代码实现代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RedBlackTree.java</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">RB_INSERT_FIXUP</span><span class="params">(RedBlackTree T, RedBlackTreeNode m)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 父节点是红色</span></span><br><span class="line">  <span class="keyword">while</span> (m != <span class="keyword">null</span> &amp;&amp; IsNil(m) == <span class="keyword">false</span> &amp;&amp;  m.getParent().getColor() == NodeColor.Red) &#123;</span><br><span class="line">      <span class="comment">// 父节点</span></span><br><span class="line">      RedBlackTreeNode f = m.getParent();</span><br><span class="line">      <span class="comment">// 爷爷节点</span></span><br><span class="line">      RedBlackTreeNode g = f.getParent();</span><br><span class="line">      <span class="comment">// 叔叔节点</span></span><br><span class="line">      RedBlackTreeNode u = RedBlackTree.nil;</span><br><span class="line">      <span class="keyword">if</span> (f == g.getLeft()) &#123;</span><br><span class="line">        <span class="comment">// 父节点是左节点</span></span><br><span class="line"></span><br><span class="line">        u = g.getRight();</span><br><span class="line">        <span class="keyword">if</span> (u.getColor() == NodeColor.Red)&#123;</span><br><span class="line">            <span class="comment">// 叔叔节点是红色</span></span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">            * 属于情况3，即叔叔节点也为红色，执行以下操作，并继续循环</span></span><br><span class="line"><span class="comment">            * f节点设为黑色</span></span><br><span class="line"><span class="comment">            * u节点设为黑色</span></span><br><span class="line"><span class="comment">            * g节点设为红色</span></span><br><span class="line"><span class="comment">            * 从g节点继续上溯循环判断，是否满足红黑树特性4</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">            f.setColor(NodeColor.Black);</span><br><span class="line">            u.setColor(NodeColor.Black);</span><br><span class="line">            g.setColor(NodeColor.Red);</span><br><span class="line">            m = g;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 叔叔节点是黑色</span></span><br><span class="line">            <span class="comment">// 判断插入节点是否是右节点</span></span><br><span class="line">            <span class="keyword">if</span> (m == f.getRight()) &#123;</span><br><span class="line">              <span class="comment">// 父节点是左节点，插入节点是右节点，叔叔节点是黑色</span></span><br><span class="line">              <span class="comment">/**</span></span><br><span class="line"><span class="comment">                * 图1类型，属于情况4，插入节点、父节点和祖父节点三点不一线，属于阶段1，做以下操作：</span></span><br><span class="line"><span class="comment">                * f节点左旋</span></span><br><span class="line"><span class="comment">                * 变成图2类型，情况4的阶段2，继续操作</span></span><br><span class="line"><span class="comment">                */</span></span><br><span class="line">              RedBlackTreeNode tmp = m;</span><br><span class="line">              m = f;</span><br><span class="line">              f = tmp;</span><br><span class="line">              LEFT_ROTATE(T, m);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">            * 图2类型，情况4的阶段2，执行以下操作：</span></span><br><span class="line"><span class="comment">            * 父节点颜色设为黑色</span></span><br><span class="line"><span class="comment">            * 祖父节点颜色设为红色</span></span><br><span class="line"><span class="comment">            * 对祖父节点右旋</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">            f.setColor(NodeColor.Black);</span><br><span class="line">            g.setColor(NodeColor.Red);</span><br><span class="line">            RIGHT_ROTATE(T, g);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 父节点是右节点</span></span><br><span class="line">        u = g.getLeft();</span><br><span class="line">        <span class="keyword">if</span> (u.getColor() == NodeColor.Red) &#123;</span><br><span class="line">            <span class="comment">// 叔叔节点是红色</span></span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">            * 属于情况3，即叔叔节点也为红色，执行以下操作，并继续循环</span></span><br><span class="line"><span class="comment">            * f节点设为黑色</span></span><br><span class="line"><span class="comment">            * u节点设为黑色</span></span><br><span class="line"><span class="comment">            * g节点设为红色</span></span><br><span class="line"><span class="comment">            * 从g节点继续上溯循环判断，是否满足红黑树特性4</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">            f.setColor(NodeColor.Black);</span><br><span class="line">            u.setColor(NodeColor.Black);</span><br><span class="line">            g.setColor(NodeColor.Red);</span><br><span class="line">            m = g;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 叔叔节点是黑色</span></span><br><span class="line">            <span class="comment">// 判断插入节点是否是右节点</span></span><br><span class="line">            <span class="keyword">if</span> (m == f.getLeft()) &#123;</span><br><span class="line">              <span class="comment">// 父节点是右节点，插入节点是左节点，叔叔节点是黑色</span></span><br><span class="line">              <span class="comment">/**</span></span><br><span class="line"><span class="comment">                * 图3类型，属于情况4，插入节点、父节点和祖父节点三点不一线，属于阶段1，做以下操作：</span></span><br><span class="line"><span class="comment">                * f节点右旋</span></span><br><span class="line"><span class="comment">                * 变成图4类型，情况4的阶段2，继续操作</span></span><br><span class="line"><span class="comment">                */</span></span><br><span class="line">              RedBlackTreeNode tmp = m;</span><br><span class="line">              m = f;</span><br><span class="line">              f = tmp;</span><br><span class="line">              RIGHT_ROTATE(T, m);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">            * 图4类型，情况4的阶段2，执行以下操作：</span></span><br><span class="line"><span class="comment">            * 父节点颜色设为黑色</span></span><br><span class="line"><span class="comment">            * 祖父节点颜色设为红色</span></span><br><span class="line"><span class="comment">            * 对祖父节点左旋</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line"></span><br><span class="line">            f.setColor(NodeColor.Black);</span><br><span class="line">            g.setColor(NodeColor.Red);</span><br><span class="line">            LEFT_ROTATE(T, g);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 根节点设为黑色</span></span><br><span class="line">  T.getRoot().setColor(NodeColor.Black);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">    *  左旋示意图</span></span><br><span class="line"><span class="comment">    * 对节点x进行左旋：</span></span><br><span class="line"><span class="comment">    *      px                              px</span></span><br><span class="line"><span class="comment">    *     /                               /</span></span><br><span class="line"><span class="comment">    *    x                               y</span></span><br><span class="line"><span class="comment">    *   /  \       --(左旋)--            / \</span></span><br><span class="line"><span class="comment">    *  lx   y                          x  ry</span></span><br><span class="line"><span class="comment">    *     /   \                       /  \</span></span><br><span class="line"><span class="comment">    *    ly   ry                     lx  ly</span></span><br><span class="line"><span class="comment">    *</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">LEFT_ROTATE</span><span class="params">(RedBlackTree T, RedBlackTreeNode x)</span></span>&#123;</span><br><span class="line">      <span class="comment">// 定义y节点</span></span><br><span class="line">      RedBlackTreeNode y = x.getRight();</span><br><span class="line">      <span class="comment">// y 左节点 设为 x右节点</span></span><br><span class="line">      x.setRight((y.getLeft()));</span><br><span class="line">      <span class="comment">// x 设为 y左节点父节点</span></span><br><span class="line">      y.getLeft().setParent(x);</span><br><span class="line">      <span class="comment">// x父节点 设为y父节点</span></span><br><span class="line">      y.setParent(x.getParent());</span><br><span class="line">      <span class="comment">// y 设为x父节点左/右节点或者根节点</span></span><br><span class="line">      <span class="keyword">if</span> (IsNil(x.getParent()) == <span class="keyword">true</span>) &#123;</span><br><span class="line">         <span class="comment">// x为根节点， y设为根节点</span></span><br><span class="line">         T.setRoot(y);</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (x.getParent().getLeft() == x) &#123;</span><br><span class="line">         <span class="comment">// x为左节点，y设为左节点</span></span><br><span class="line">         x.getParent().setLeft(y);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="comment">// x为右节点，y设为右节点</span></span><br><span class="line">         x.getParent().setRight(y);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// x 设为 y左节点</span></span><br><span class="line">      y.setLeft(x);</span><br><span class="line">      <span class="comment">// y 设为x父节点</span></span><br><span class="line">      x.setParent(y);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 右旋示意图</span></span><br><span class="line"><span class="comment">    * 对节点x进行右旋：</span></span><br><span class="line"><span class="comment">    *            px                               px</span></span><br><span class="line"><span class="comment">    *           /                                /</span></span><br><span class="line"><span class="comment">    *          x                                y</span></span><br><span class="line"><span class="comment">    *         /  \      --(右旋)--             /  \</span></span><br><span class="line"><span class="comment">    *        y   rx                          ly   x</span></span><br><span class="line"><span class="comment">    *       / \                                  / \</span></span><br><span class="line"><span class="comment">    *      ly  ry                               ry  rx</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">RIGHT_ROTATE</span><span class="params">(RedBlackTree T, RedBlackTreeNode x)</span></span>&#123;</span><br><span class="line">      <span class="comment">// 左节点</span></span><br><span class="line">      RedBlackTreeNode y = x.getLeft();</span><br><span class="line">      <span class="comment">// y的右节点 设为 x左节点</span></span><br><span class="line">      x.setLeft(y.getRight());</span><br><span class="line">      y.getRight().setParent(x);</span><br><span class="line">      <span class="comment">// x节点父节点设为 y父节点</span></span><br><span class="line">      y.setParent(x.getParent());</span><br><span class="line">      <span class="keyword">if</span> (IsNil(y.getParent()) == <span class="keyword">true</span>)&#123;</span><br><span class="line">         T.setRoot(y);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">else</span> <span class="keyword">if</span> (x.getParent().getRight() == x) &#123;</span><br><span class="line">         x.getParent().setRight(y);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">         x.getParent().setLeft(y);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// x设为y右节点</span></span><br><span class="line">      y.setRight(x);</span><br><span class="line">      <span class="comment">// y设为x父节点</span></span><br><span class="line">      x.setParent(y);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="（2）、删除节点"><a href="#（2）、删除节点" class="headerlink" title="（2）、删除节点"></a>（2）、删除节点</h4><p>  删除节点的情况略复杂于添加节点，和添加节点类似，分两步进行，首先删除节点，然后对删除后结果进行平衡。</p>
+<ol>
+<li><p>删除节点</p>
+<p>删除节点可以分几种情况加以处理：</p>
+</li>
+</ol>
+<p>  <strong>情况1：</strong>d节点两个子节点都有；<br>  <strong>情况2：</strong>d节点一个子节点也没有；<br>  <strong>情况3：</strong>d节点有一个子节点；</p>
+<p>  情况1下，先找到d节点的后继节点，即d右子树的最小节点，将后继节点的值替换到删除节点位置，颜色不需要变化，然后将删除d节点的情况变为删除后继节点的情况，即将后继节点赋值给d，因为后继节点肯定只有右子树，符合情况2下的一种情况，下面再详细介绍；</p>
+<p>  查找后继节点的代码实现：</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"> <span class="comment">// RedBlackTree.java</span></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 查找 x 左子树最小的节点</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> x</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> RedBlackTreeNode <span class="title">TREE_MINIMUM</span><span class="params">(RedBlackTreeNode x)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">while</span> (IsNil(x.getLeft()) == <span class="keyword">false</span>) &#123;</span><br><span class="line">      x = x.getLeft();</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>   删除节点代码实现：</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">// RedBlackTree.java</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 删除节点</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> T</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> z</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 删除节点</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> T</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> z</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">RB_DELETE</span><span class="params">(RedBlackTree T, RedBlackTreeNode z)</span> </span>&#123;</span><br><span class="line">   RedBlackTreeNode y = z;</span><br><span class="line">   RedBlackTreeNode x = RedBlackTree.nil;</span><br><span class="line">   String yOriginColor = y.getColor();</span><br><span class="line">   <span class="keyword">if</span> (z.getLeft() == RedBlackTree.nil) &#123;</span><br><span class="line">      <span class="comment">// z没有左节点</span></span><br><span class="line">      x = z.getRight();</span><br><span class="line">      RB_TRANSPLANT(T, z, z.getRight());</span><br><span class="line">   &#125; <span class="keyword">else</span> <span class="keyword">if</span> (z.getRight() == RedBlackTree.nil) &#123;</span><br><span class="line">      <span class="comment">// z没有右节点</span></span><br><span class="line">      x = z.getLeft();</span><br><span class="line">      RB_TRANSPLANT(T, z, z.getLeft());</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      y = TREE_MINIMUM(z.getRight());</span><br><span class="line">      yOriginColor = y.getColor();</span><br><span class="line">      x = y.getRight();</span><br><span class="line">      <span class="keyword">if</span> (y.getParent() == z) &#123;</span><br><span class="line">         <span class="comment">// y就是 z 的右节点</span></span><br><span class="line">         x.setParent(y);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="comment">// y 是 z 右子树的最小节点</span></span><br><span class="line">         <span class="comment">// 用 y 的值替换 z位置的值</span></span><br><span class="line">         RB_TRANSPLANT(T, y, y.getRight());</span><br><span class="line">         y.setRight(z.getRight());</span><br><span class="line">         y.getRight().setParent(y);</span><br><span class="line">      &#125;</span><br><span class="line">      RB_TRANSPLANT(T, z, y);</span><br><span class="line">      y.setLeft(z.getLeft());</span><br><span class="line">      y.getLeft().setParent(y);</span><br><span class="line">      y.setColor(z.getColor());</span><br><span class="line">      <span class="keyword">if</span> (yOriginColor == NodeColor.Black) &#123;</span><br><span class="line">         <span class="comment">// y 是红色，直接删除 y</span></span><br><span class="line">         <span class="comment">// 否则需要重新平衡树</span></span><br><span class="line">         RB_DELETE_FIXUP(T, x);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>  重新平衡树有多种情形 ，下面一一介绍：</p>
+<p>  情形1: d节点兄弟节点s为红色，此时s一定有两个子节点，如下图；<br>  <img src="./red-black-tree-11.png" alt="情况1：兄弟节点s为红色"></p>
+<p>   操作：改变s和d的父节点p的颜色，改变后s为黑色，p为红色，p节点左旋一次，d节点的兄弟节点变为s节点的右子节点，一定为黑色，变成情形2、情形3或者情形4继续处理；</p>
+<p>  情形2： s和两个子节点均为黑色，如下图：</p>
+<p>  <img src="./red-black-tree-15.png" alt="情况2：s和两个子节点均为黑色"></p>
+<p>  操作：将s变为红色，此时，d的父节点两个子树的黑色都减少一层（相对于整个树的其他路径），为了补偿这层减少的黑色，将d置为d的父节点，继续遍历，直到遇到第一个红色节点，变为黑色，此时，减少的一层黑色补充回来，达到平衡状态（此时也不关心p节点的颜色，只要在上层找到一个红色节点，变为黑色，整个树就可以达到平衡状态）；</p>
+<p>  情形3：d节点兄弟节点s是黑色，s的左孩子是红色，右孩子是黑色，如下图：<br>  <img src="./red-black-tree-12.png" alt="情况2：兄弟节点s为黑色，近侄子为红色"></p>
+<p>   操作：将s和s的左节点颜色互换，s进行右旋，然后d的兄弟节点变为之前s的左节点为黑色，兄弟节点的右节点变为黑色，变成情形4继续处理；</p>
+<p>  情形4：d节点的兄弟节点s是黑色，s的右节点是红色，如下图：<br>  <img src="./red-black-tree-13.png" alt="情况2-5：兄弟节点s为黑色，远侄子为红色"></p>
+<p>  操作：兄弟节点s设为d节点父节点的颜色，父节点p设为黑色，s节点的右节点设为黑色，p节点右旋，达到平衡状态；（这时，不论p节点的颜色是红还是黑，包含d路径的减少的黑色由右旋并设为黑色的p节点补充，d兄弟节点s一侧的黑色由s节点的右孩子补充，s节点变为之前的父节点，p子树达到和之前相同状态，平衡结束）；</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><h4 id="1-插入节点总结"><a href="#1-插入节点总结" class="headerlink" title="1. 插入节点总结"></a>1. 插入节点总结</h4><ol>
+<li><p>如果是根节点，直接插入，修改颜色为黑色，完成；</p>
+</li>
+<li><p>如果父节点是黑色，直接插入，不需要调整，完成；</p>
+</li>
+<li><p>如果父节点是红色，判断叔叔节点颜色：</p>
+<ul>
+<li><p>3.1 叔叔节点也是红色，则将父节点和叔叔节点变为黑色，爷爷节点变为红色，由爷爷节点继续上溯进行平衡（祖爷爷节点可能为红色，爷爷变红后，会破坏平衡性，需要回溯判断）；</p>
+</li>
+<li><p>3.2 叔叔节点是黑色，也分为两种情况：</p>
+<ul>
+<li>3.2.1 新节点，父节点，祖父节点不在三点一线，父节点需要旋转，达到三点一线（3.2.2情形）；</li>
+<li>3.2.2 新节点，父节点，祖父节点在三点一线，祖父节点需要旋转（成为父节点的子节点，具体旋转方向看情况而定），父节点变为黑色，祖父节点变为红色，完成调整；</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h4 id="2-删除节点总结"><a href="#2-删除节点总结" class="headerlink" title="2. 删除节点总结"></a>2. 删除节点总结</h4><ol>
+<li><p>删除节点有左右节点，则寻找删除节点的后继节点（右子树的最小值），用后继节点的值替换删除节点的值，转而研究删除后继节点的删除问题（后继节点一定只有一个右子节点，或者没有子节点，变成情况2）；</p>
+</li>
+<li><p>只有一个节点或者没有子节点（没有子节点可认为左子节点是黑色），继续判断下列条件：</p>
+<ul>
+<li><p>2.1 若删除节点颜色是红色，用子节点替换该节点（直接删除节点），不用调整；</p>
+</li>
+<li><p>2.2 若删除节点是黑色，用其子节点替换删除节点的位置，继续判断：</p>
+<ul>
+<li><p>2.2.1 替换该节点的子节点是红色，该子节点变为黑色，完成调整；</p>
+</li>
+<li><p>2.2.2 替换该节点的子节点是黑色，继续下列判断：</p>
+<ul>
+<li><p>2.2.2.1 删除节点的兄弟节点是红色（此时必有两个非空子节点），父节点变为红色，兄弟节点变为黑色，父节点做一次旋转（旋转后兄弟节点成为父节点父节点，旋转方向看具体情况而定），删除节点的兄弟节点一定为黑色，继续判断；</p>
+</li>
+<li><p>2.2.2.2 删除节点的兄弟节点和其两个子节点都是黑色，兄弟节点变为红色，将d置为d的父节点，继续向上遍历（d的父节点的两边子树都减少一层黑色，需要向上找到一个红色节点变为黑色，找回减少的这层黑色）；</p>
+</li>
+<li><p>2.2.2.3 近侄子节点是红色，远侄子节点为黑色，兄弟节点和近侄子节点换色（兄弟节点变为红色，近侄子节点变为黑色），兄弟节点旋转（近侄子节点成为兄弟节点父节点），旋转后近侄子节点成为兄弟节点一定为黑色，远侄子节点为之前兄弟节点一定是红色，变成下面一种情况；</p>
+</li>
+<li><p>2.2.2.4 远侄子节点为红色，则兄弟节点设为删除节点父节点的颜色，父节点设为黑色，远侄子节点设为黑色，父节点旋转一次（兄弟节点成为父节点的父节点，旋转方向看情况），达到平衡（删除节点一侧减少的黑色节点由父节点补充，不论父节点的颜色如何）。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
+<li><p><a href="https://github.com/MuffinYu/algorithm-implementation-java" target="_blank" rel="noopener">java实现源码</a></p>
+</li>
+<li><p><a href="https://blog.csdn.net/lsr40/article/details/85266069" target="_blank" rel="noopener">【算法】红黑树插入数据的情况与实现（三）</a></p>
+</li>
+<li><p><a href="https://www.csxiaoyao.cn/blog/index.php/2016/10/23/java/" target="_blank" rel="noopener">csxiaoyao 博客 —— 红黑树算法的Java实现 【原创】</a></p>
+</li>
+<li><p><a href="https://www.cnblogs.com/qingergege/p/7351659.html" target="_blank" rel="noopener">红黑树之删除节点</a></p>
+</li>
+<li><p>算法导论-第13章红黑树 删除</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/09/11/MyBatis-缓存机制分析和缓存控制/" rel="next" title="MyBatis 缓存机制分析和缓存控制">
+                  <i class="fa fa-chevron-left"></i> MyBatis 缓存机制分析和缓存控制
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="gitalk-container"></div>
+  
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、红黑树介绍"><span class="nav-number">1.</span> <span class="nav-text">一、红黑树介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-基本定义"><span class="nav-number">1.1.</span> <span class="nav-text">1. 基本定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-引理"><span class="nav-number">1.2.</span> <span class="nav-text">2. 引理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、红黑树构建"><span class="nav-number">2.</span> <span class="nav-text">二、红黑树构建</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#（1）、添加节点"><span class="nav-number">2.1.</span> <span class="nav-text">（1）、添加节点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#（2）、删除节点"><span class="nav-number">2.2.</span> <span class="nav-text">（2）、删除节点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-插入节点总结"><span class="nav-number">3.1.</span> <span class="nav-text">1. 插入节点总结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-删除节点总结"><span class="nav-number">3.2.</span> <span class="nav-text">2. 删除节点总结</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Robin</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Robin</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.1"></script><script src="/js/motion.js?v=7.4.1"></script>
+<script src="/js/schemes/pisces.js?v=7.4.1"></script>
+<script src="/js/next-boot.js?v=7.4.1"></script><script src="/js/bookmark.js?v=7.4.1"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="/js/local-search.js?v=7.4.1"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: '48c304a3b82423276209',
+      clientSecret: 'e09b744a31e79025c4dd1bc236c743eddc4ad55b',
+      repo: 'robin',
+      owner: 'MuffinYu',
+      admin: ['MuffinYu'],
+      id: 'c3953fd07e850ea69d251f469bf2a6d3',
+        language: window.navigator.language || window.navigator.userLanguage,
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
+
+</body>
+</html>
