@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>算法基础（1）——红黑树</title>
-    <url>/2019/10/08/%E7%AE%97%E6%B3%95%E5%9F%BA%E7%A1%80%EF%BC%881%EF%BC%89%E2%80%94%E2%80%94%E7%BA%A2%E9%BB%91%E6%A0%91/</url>
+    <title>算法基础(1)——红黑树</title>
+    <url>/2019/10/08/%E7%AE%97%E6%B3%95%E5%9F%BA%E7%A1%80(1)%E2%80%94%E2%80%94%E7%BA%A2%E9%BB%91%E6%A0%91/</url>
     <content><![CDATA[<p>红黑树(Red-Black Tree，简称R-B Tree)，它一种特殊的二叉查找树。</p>
 <a id="more"></a>
 
