@@ -57,26 +57,26 @@
 
   <meta property="og:type" content="website">
 <meta property="og:title" content="Robin&#39;s blog">
-<meta property="og:url" content="https://www.muffinyu.com/archives/2019/09/index.html">
+<meta property="og:url" content="https://www.muffinyu.com/page/2/index.html">
 <meta property="og:site_name" content="Robin&#39;s blog">
 <meta property="og:locale" content="zh-CN">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Robin&#39;s blog">
-  <link rel="canonical" href="https://www.muffinyu.com/archives/2019/09/">
+  <link rel="canonical" href="https://www.muffinyu.com/page/2/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome: false,
+    isHome: true,
     isPost: false,
     isPage: false,
-    isArchive: true
+    isArchive: false
   };
 </script>
 
-  <title>归档 | Robin's blog</title>
+  <title>Robin's blog</title>
   
 
 
@@ -218,77 +218,105 @@
         <div class="content-wrap">
             
 
-  
-    
-    
-  
-    
-    
-  
-  
-
           <div class="content">
             
 
+  <div class="posts-expand">
+        
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        
-        
-        
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.muffinyu.com/2019/05/23/从一个需求开始学babel插件开发/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Robin">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Robin's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
           
-        
-        <span class="collection-header">嗯..! 目前共计 11 篇日志。 继续努力。</span>
-      </div>
-      
+            
+            <a href="/2019/05/23/从一个需求开始学babel插件开发/" class="post-title-link" itemprop="url">从一个需求开始学babel插件开发</a>
+          
+        </h1>
 
-      
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
 
-  
-  
+              
+                
+              
 
-  
+              <time title="创建时间：2019-05-23 17:20:48" itemprop="dateCreated datePublished" datetime="2019-05-23T17:20:48+08:00">2019-05-23</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-16 18:58:24" itemprop="dateModified" datetime="2019-10-16T18:58:24+08:00">2019-10-16</time>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+
     
-    <div class="collection-year">
-      <h1 class="collection-header">2019</h1>
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>基于现在JS这门语言快速发展的现状，很多还处于<a href="https://github.com/tc39/proposals" target="_blank" rel="noopener">TC39 提案</a>的新语法，或者已经写入新的语言规则的语法提案但在浏览器的支持度上不是十分普及， 以及JS的运行环境，也就是用户的浏览器碎片化的分布，无法保证我们在开发过程中写的JS代码在客户端一致正常的运行，这种情况肯定是不能接受的。</p>
+<p>而这正是Babel存在的价值，Babel可以把新的语法编译成能在不同浏览器中运行一致的兼容语法。开发者可以尽情的享受新的语法在开发中带来的爽快，如使用React的jsx语法，ES6的模块方案，class，箭头函数等，而在生产环境中只需要按照需求，配置好Babel的presets和plugins等配置，把项目代码编译成生产代码就可以了。</p>
+<p>因此了解一些Babel插件的编写方法绝对是有必要的。</p>
+          <!--noindex-->
+          
+            <div class="post-button">
+              <a class="btn" href="/2019/05/23/从一个需求开始学babel插件开发/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
     </div>
-  
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2019-09-11T17:30:46+08:00"
-              content="2019-09-11">
-          09-11
-        </time>
-      </div>
-
-      <h2 class="post-title">
-        
-          <a class="post-title-link" href="/2019/09/11/MyBatis-缓存机制分析和缓存控制/" itemprop="url">
-            <span itemprop="name">MyBatis 缓存机制分析和缓存控制</span>
-          </a>
-        
-      </h2>
-
-    </header>
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
   </article>
+  
+  
+  
 
-
-
-
-    </div>
+    
   </div>
-  
-  
-  
 
   
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+  </nav>
 
 
 

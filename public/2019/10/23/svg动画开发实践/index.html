@@ -55,14 +55,18 @@
   };
 </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Robin&#39;s blog">
-<meta property="og:url" content="https://www.muffinyu.com/archives/2019/09/index.html">
+  <meta name="description" content="SVG 是一种开放标准的矢量图形语言，即表示可缩放矢量图形（Scalable Vector Graphics）格式，是由万维网联盟（W3C）开发并进行维护的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="svg动画开发实践">
+<meta property="og:url" content="https://www.muffinyu.com/2019/10/23/svg动画开发实践/index.html">
 <meta property="og:site_name" content="Robin&#39;s blog">
+<meta property="og:description" content="SVG 是一种开放标准的矢量图形语言，即表示可缩放矢量图形（Scalable Vector Graphics）格式，是由万维网联盟（W3C）开发并进行维护的。">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-23T08:58:48.035Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Robin&#39;s blog">
-  <link rel="canonical" href="https://www.muffinyu.com/archives/2019/09/">
+<meta name="twitter:title" content="svg动画开发实践">
+<meta name="twitter:description" content="SVG 是一种开放标准的矢量图形语言，即表示可缩放矢量图形（Scalable Vector Graphics）格式，是由万维网联盟（W3C）开发并进行维护的。">
+  <link rel="canonical" href="https://www.muffinyu.com/2019/10/23/svg动画开发实践/">
 
 
 <script id="page-configurations">
@@ -70,13 +74,13 @@
   CONFIG.page = {
     sidebar: "",
     isHome: false,
-    isPost: false,
+    isPost: true,
     isPage: false,
-    isArchive: true
+    isArchive: false
   };
 </script>
 
-  <title>归档 | Robin's blog</title>
+  <title>svg动画开发实践 | Robin's blog</title>
   
 
 
@@ -218,82 +222,113 @@
         <div class="content-wrap">
             
 
-  
-    
-    
-  
-    
-    
-  
-  
-
           <div class="content">
             
 
+  <div class="posts-expand">
+      
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        
-        
-        
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.muffinyu.com/2019/10/23/svg动画开发实践/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Robin">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Robin's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
           
-        
-        <span class="collection-header">嗯..! 目前共计 11 篇日志。 继续努力。</span>
-      </div>
-      
+            svg动画开发实践
+            <a href="https://github.com/user-name/repo-name/tree/branch-name/subdirectory-name_posts/svg动画开发实践.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil"></i></a>
 
-      
+          
+        </h1>
 
-  
-  
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
 
-  
+              
+                
+              
+
+              <time title="创建时间：2019-10-23 16:54:01 / 修改时间：16:58:48" itemprop="dateCreated datePublished" datetime="2019-10-23T16:54:01+08:00">2019-10-23</time>
+            </span>
+          
+            
+
+            
+          
+
+          
+
+        </div>
+      </header>
+
     
-    <div class="collection-year">
-      <h1 class="collection-header">2019</h1>
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>SVG 是一种开放标准的矢量图形语言，即表示可缩放矢量图形（Scalable Vector Graphics）格式，是由万维网联盟（W3C）开发并进行维护的。</p>
+<a id="more"></a>
+
+<p>  由于 SVG 图像是矢量图像，可以无限缩小放大，所以 SVG 可以在任何分辨率的设备上高清显示，不需要再像以前一样输出各种 @2x 倍图来适配不同分辨率的屏幕。而且有非常成熟的设计工具支持导出 SVG 的图形格式，比如，AI 或者是 Sketch 等设计软件都支持直接导出 SVG 的图形格式，非常方便。</p>
+<p>  更主要的是，因为 SVG 还是一种 XML 格式的图形，所以我们可以使用 CSS 和 JavaScript 与它们进行交互，同时配合如 <a href="https://animejs.com/" target="_blank" rel="noopener">anime.js</a> 这类JS动画引擎，使得 SVG 在动画方面有着很大潜力和想象力。</p>
+
     </div>
-  
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2019-09-11T17:30:46+08:00"
-              content="2019-09-11">
-          09-11
-        </time>
-      </div>
-
-      <h2 class="post-title">
+    
+    
+    
         
-          <a class="post-title-link" href="/2019/09/11/MyBatis-缓存机制分析和缓存控制/" itemprop="url">
-            <span itemprop="name">MyBatis 缓存机制分析和缓存控制</span>
-          </a>
-        
-      </h2>
+      
 
-    </header>
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/10/08/算法基础(1)——红黑树/" rel="next" title="算法基础(1)——红黑树">
+                  <i class="fa fa-chevron-left"></i> 算法基础(1)——红黑树
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
   </article>
+  
+  
+  
 
-
-
-
-    </div>
   </div>
-  
-  
-  
-
-  
-
 
 
           </div>
           
+    
+    <div class="comments" id="gitalk-container"></div>
+  
 
         </div>
           
@@ -306,6 +341,11 @@
 
   <aside class="sidebar">
     <div class="sidebar-inner">
+        
+        
+        
+        
+      
 
       <ul class="sidebar-nav motion-element">
         <li class="sidebar-nav-toc">
@@ -432,6 +472,24 @@
 
   
 
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: 'afa2a9b070b3b3285557',
+      clientSecret: 'd097552f9b5531c31969d715f575dd8d151d94e9',
+      repo: 'robin',
+      owner: 'MuffinYu',
+      admin: ['MuffinYu'],
+      id: 'de0c8dfbd80818d064e5e8a4ef78f12c',
+        language: window.navigator.language || window.navigator.userLanguage,
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
 
 </body>
 </html>

@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>svg动画开发实践</title>
+    <url>/2019/10/23/svg%E5%8A%A8%E7%94%BB%E5%BC%80%E5%8F%91%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<p>SVG 是一种开放标准的矢量图形语言，即表示可缩放矢量图形（Scalable Vector Graphics）格式，是由万维网联盟（W3C）开发并进行维护的。</p>
+<a id="more"></a>
+
+<p>  由于 SVG 图像是矢量图像，可以无限缩小放大，所以 SVG 可以在任何分辨率的设备上高清显示，不需要再像以前一样输出各种 @2x 倍图来适配不同分辨率的屏幕。而且有非常成熟的设计工具支持导出 SVG 的图形格式，比如，AI 或者是 Sketch 等设计软件都支持直接导出 SVG 的图形格式，非常方便。</p>
+<p>  更主要的是，因为 SVG 还是一种 XML 格式的图形，所以我们可以使用 CSS 和 JavaScript 与它们进行交互，同时配合如 <a href="https://animejs.com/" target="_blank" rel="noopener">anime.js</a> 这类JS动画引擎，使得 SVG 在动画方面有着很大潜力和想象力。</p>
+]]></content>
+  </entry>
+  <entry>
     <title>算法基础(1)——红黑树</title>
     <url>/2019/10/08/%E7%AE%97%E6%B3%95%E5%9F%BA%E7%A1%80(1)%E2%80%94%E2%80%94%E7%BA%A2%E9%BB%91%E6%A0%91/</url>
     <content><![CDATA[<p>红黑树(Red-Black Tree，简称R-B Tree)，它一种特殊的二叉查找树。</p>
