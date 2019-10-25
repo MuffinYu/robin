@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title></title>
-    <url>/2019/10/23/svg%E5%8A%A8%E7%94%BB%E5%BC%80%E5%8F%91%E5%AE%9E%E8%B7%B5/style/</url>
-    <content><![CDATA[body {
-  background: red !important;
-}]]></content>
-  </entry>
-  <entry>
     <title>svg动画开发实践(1)</title>
     <url>/2019/10/23/svg%E5%8A%A8%E7%94%BB%E5%BC%80%E5%8F%91%E5%AE%9E%E8%B7%B5/</url>
     <content><![CDATA[<p>SVG 是一种开放标准的矢量图形语言，即表示可缩放矢量图形（Scalable Vector Graphics）格式，是由万维网联盟（W3C）开发并进行维护的。</p>
