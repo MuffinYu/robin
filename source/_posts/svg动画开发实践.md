@@ -154,7 +154,7 @@ SVG 描边的原理就是通过 stroke-dashoffset 和 stroke-dasharray 来做，
 }
 ```
 
-[示例代码](https://github.com/MuffinYu/robin/tree/hexo/example/checkmark.html)
+[示例代码](https://github.com/MuffinYu/robin/tree/hexo/example/svg-animation/checkmark.html)
 
 #### 2. 描边动画实战
 

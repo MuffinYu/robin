@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.1">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.1" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.1">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.4.1',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":true,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="webpack 已经是毫无争议的目前主流的前端打包工具，在深入理解webpack的需求下，有一个绕不开的基础，就是深入理解 tapable 库，整个 webpack 的可扩展的插件系统和其内部的插件系统，都是基于这个库中提供的接口实现的，在webpack源码中，也随处可见 tapable 身影，因此理解 tapable 的插件实现机制是深入理解 webpack 机制的前提。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Webpack的基石——tapable">
+<meta property="og:url" content="https://www.muffinyu.com/2019/10/27/Webpack的基石——tapable/index.html">
+<meta property="og:site_name" content="Robin&#39;s blog">
+<meta property="og:description" content="webpack 已经是毫无争议的目前主流的前端打包工具，在深入理解webpack的需求下，有一个绕不开的基础，就是深入理解 tapable 库，整个 webpack 的可扩展的插件系统和其内部的插件系统，都是基于这个库中提供的接口实现的，在webpack源码中，也随处可见 tapable 身影，因此理解 tapable 的插件实现机制是深入理解 webpack 机制的前提。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-27T09:54:28.631Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Webpack的基石——tapable">
+<meta name="twitter:description" content="webpack 已经是毫无争议的目前主流的前端打包工具，在深入理解webpack的需求下，有一个绕不开的基础，就是深入理解 tapable 库，整个 webpack 的可扩展的插件系统和其内部的插件系统，都是基于这个库中提供的接口实现的，在webpack源码中，也随处可见 tapable 身影，因此理解 tapable 的插件实现机制是深入理解 webpack 机制的前提。">
+  <link rel="canonical" href="https://www.muffinyu.com/2019/10/27/Webpack的基石——tapable/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Webpack的基石——tapable | Robin's blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Robin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">一起学点东西～</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+        
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+      
+    
+      
+      
+        
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      
+    
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger">
+          <i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+    
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/MuffinYu/robin" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.muffinyu.com/2019/10/27/Webpack的基石——tapable/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Robin">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Robin's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            Webpack的基石——tapable
+            <a href="https://github.com/user-name/repo-name/tree/branch-name/subdirectory-name_posts/Webpack的基石——tapable.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil"></i></a>
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-10-27 17:23:55 / 修改时间：17:54:28" itemprop="dateCreated datePublished" datetime="2019-10-27T17:23:55+08:00">2019-10-27</time>
+            </span>
+          
+            
+
+            
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>webpack 已经是毫无争议的目前主流的前端打包工具，在深入理解webpack的需求下，有一个绕不开的基础，就是深入理解 tapable 库，整个 webpack 的可扩展的插件系统和其内部的插件系统，都是基于这个库中提供的接口实现的，在webpack源码中，也随处可见 tapable 身影，因此理解 tapable 的插件实现机制是深入理解 webpack 机制的前提。</p>
+<a id="more"></a>
+
+<p>写本文时，webpack的稳定版本是 v4.41.2，对应的 <a href="https://github.com/webpack/webpack/tree/webpack-4" target="_blank" rel="noopener">github webpack webpack-4 分支</a> ，webpack 4 所采用的 tapable 版本是 v1.1.3 以上的版本，v1.* 版本有较大改变，目前 tapable 的稳定版本就是 v1.1.3，对应 <a href="https://github.com/webpack/tapable/tree/tapable-1" target="_blank" rel="noopener">github tapable tapable-1 分支</a>，本文也会主要以v1.1.3版本的代码和文档为主，进行分析。</p>
+<p>本文先基本翻译 tapable 的文档，然后结合一个简单的例子，深入理解其 Hook 机制。</p>
+<p><a href="https://github.com/MuffinYu/robin/tree/hexo/example/Webpack的基石——tapable" target="_blank" rel="noopener">文中的示例代码在此处</a></p>
+<h2 id="一、基本文档翻译"><a href="#一、基本文档翻译" class="headerlink" title="一、基本文档翻译"></a>一、基本文档翻译</h2><p>tapable 是为插件系统写的一个模块；</p>
+<p>tapable 暴露出了很多的 Hook（钩子）类，这些钩子可以用来为插件制造钩子函数；</p>
+<p>全部钩子函数如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123;</span><br><span class="line">  SyncHook,</span><br><span class="line">  SyncBailHook,</span><br><span class="line">  SyncWaterfallHook,</span><br><span class="line">  SyncLoopHook,</span><br><span class="line">  AsyncParallelHook,</span><br><span class="line">  AsyncParallelBailHook,</span><br><span class="line">  AsyncSeriesHook,</span><br><span class="line">  AsyncSeriesBailHook,</span><br><span class="line">  AsyncSeriesWaterfallHook</span><br><span class="line">&#125; = <span class="built_in">require</span>(<span class="string">"tapable"</span>);</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h3><p>所有的钩子函数都可以接受一个可选的参数，这个参数是一个参数名的字符串列表；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> hook = <span class="keyword">new</span> SyncHook([<span class="string">"arg1"</span>, <span class="string">"arg2"</span>, <span class="string">"arg3"</span>]);</span><br></pre></td></tr></table></figure>
+
+<p>最佳实践是将一个类的所有钩子所有的放放到 <strong>hooks</strong> 这个属性中：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Car</span> </span>&#123;</span><br><span class="line">  <span class="keyword">constructor</span>() &#123;</span><br><span class="line">    <span class="keyword">this</span>.hooks = &#123;</span><br><span class="line">      accelerate: <span class="keyword">new</span> SyncHook([<span class="string">"newSpeed"</span>]),</span><br><span class="line">      brake: <span class="keyword">new</span> SyncHook(),</span><br><span class="line">      calculateRoutes: <span class="keyword">new</span> AsyncParallelHook([<span class="string">"source"</span>, <span class="string">"target"</span>, <span class="string">"routesList"</span>])</span><br><span class="line">    &#125;;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* 其他的代码... */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后就可以使用这些钩子了：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> myCar = <span class="keyword">new</span> Car();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用 tap 方法添加一个消费者</span></span><br><span class="line">myCar.hooks.brake.tap(<span class="string">"WarningLampPlugin"</span>, () =&gt; warningLamp.on());</span><br></pre></td></tr></table></figure>
+
+<p>这里需要传入一个名字，来区分不同的插件。</p>
+<p>下面将会接受这些参数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">myCar.hooks.accelerate.tap(<span class="string">"LoggerPlugin"</span>, newSpeed =&gt; <span class="built_in">console</span>.log(<span class="string">`Accelerating to <span class="subst">$&#123;newSpeed&#125;</span>`</span>));</span><br></pre></td></tr></table></figure>
+
+<p>对于 sync hooks（同步钩子)，只能使用 tap 方法来添加插件。async hooks（异步钩子）支持异步的插件：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">myCar.hooks.calculateRoutes.tapPromise(<span class="string">"GoogleMapsPlugin"</span>, (source, target, routesList) =&gt; &#123;</span><br><span class="line">  <span class="comment">// return a promise</span></span><br><span class="line">  <span class="keyword">return</span> google.maps.findRoute(source, target).then(<span class="function"><span class="params">route</span> =&gt;</span> &#123;</span><br><span class="line">    routesList.add(route);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br><span class="line">myCar.hooks.calculateRoutes.tapAsync(<span class="string">"BingMapsPlugin"</span>, (source, target, routesList, callback) =&gt; &#123;</span><br><span class="line">  bing.findRoute(source, target, (err, route) =&gt; &#123;</span><br><span class="line">    <span class="keyword">if</span>(err) <span class="keyword">return</span> callback(err);</span><br><span class="line">    routesList.add(route);</span><br><span class="line">    <span class="comment">// call the callback</span></span><br><span class="line">    callback();</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 异步钩子也可以使用同步方式添加消费者</span></span><br><span class="line">myCar.hooks.calculateRoutes.tap(<span class="string">"CachedRoutesPlugin"</span>, (source, target, routesList) =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> cachedRoute = cache.get(source, target);</span><br><span class="line">  <span class="keyword">if</span>(cachedRoute)</span><br><span class="line">    routesList.add(cachedRoute);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>这个类声明这些钩子必须调用他们：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Car</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * SyncHook(同步钩子)和 AsyncParallelHook(同步并行钩子)不会有返回值</span></span><br><span class="line"><span class="comment">  * 如果需要获取返回值，可以使用 SyncWaterfallHook (同步瀑布流式钩子) 和 AsyncSeriesWaterfallHook (同步瀑布流式串行钩子) 来代替</span></span><br><span class="line"><span class="comment">  **/</span> </span><br><span class="line">  setSpeed(newSpeed) &#123;</span><br><span class="line">    <span class="comment">// 这种调用方式会返回undefined，即使你在消费者函数中有返回值</span></span><br><span class="line">    <span class="keyword">this</span>.hooks.accelerate.call(newSpeed);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  useNavigationSystemPromise(source, target) &#123;</span><br><span class="line">    <span class="keyword">const</span> routesList = <span class="keyword">new</span> List();</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.hooks.calculateRoutes.promise(source, target, routesList).then(<span class="function">(<span class="params">res</span>) =&gt;</span> &#123;</span><br><span class="line">      <span class="comment">// res is undefined for AsyncParallelHook</span></span><br><span class="line">      <span class="keyword">return</span> routesList.getRoutes();</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  useNavigationSystemAsync(source, target, callback) &#123;</span><br><span class="line">    <span class="keyword">const</span> routesList = <span class="keyword">new</span> List();</span><br><span class="line">    <span class="keyword">this</span>.hooks.calculateRoutes.callAsync(source, target, routesList, err =&gt; &#123;</span><br><span class="line">      <span class="keyword">if</span>(err) <span class="keyword">return</span> callback(err);</span><br><span class="line">      callback(<span class="literal">null</span>, routesList.getRoutes());</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Hook 将使用运行你的插件的最高效的方法来编译出一个方法，它产生的代码取决于以下几点：</p>
+<ul>
+<li>注册是插件数量（一个没有，有一个，很多）；</li>
+<li>注册的插件的种类（sync(异步的)，async(同步的)，promise)</li>
+<li>被调用的方式（sync(异步的)，async(同步的)， promise）</li>
+<li>参数数量</li>
+<li>是否使用了 interception (监听器)</li>
+</ul>
+<p>这些决定了产生可能的最快的可执行方法。</p>
+<h3 id="Hook-类型"><a href="#Hook-类型" class="headerlink" title="Hook 类型"></a>Hook 类型</h3><p>每个钩子可以被 tapped（注册）一个或者多个方法。他们如何执行取决于钩子的类型：</p>
+<ul>
+<li><p>Basic hook: 基础的钩子（名字中没有 “Waterfall”, “Bail” 或者 “Loop” 关键字的）。这种类型会连续简单的执行每一个注册于其上方法。</p>
+</li>
+<li><p><strong>Waterfall</strong>: 这种类型的钩子也会连续的执行每一个注册于其上的方法，与基础钩子不同的是，它会将每一个方法的执行返回值传给下一个方法。</p>
+</li>
+<li><p><strong>Bail</strong>：这种类型的钩子可以提前结束。当任意一个注册的方法执行时返回了一些值，这种类型的钩子会取消执行其余的方法。</p>
+</li>
+<li><p><strong>Loop</strong>: TODO</p>
+</li>
+</ul>
+<p>另外，钩子有 synchronous （同步）和 asynchronous（异步）之分。基于这种情况，有 “Sync”, “AsyncSeries”, 和 “AsyncParallel” 类型的钩子：</p>
+<ul>
+<li><p><strong>Sync</strong>: 同步的钩子只能注册同步的方法（使用 myHook.tap()）。</p>
+</li>
+<li><p><strong>AsyncSeries</strong>: 一个  async-series（同步串行）的钩子可以注册 synchronous（同步的）, callback-based（回调方式） 和 promise-based（基于 promise的）(使用 myHook.tap(), myHook.tapAsync() 和 myHook.tapPromise() 注册)。它将串行的执行每一个异步方法。</p>
+</li>
+<li><p><strong>AsyncParallel</strong>: 一个  async-parallel（同步并行）的钩子可以注册 synchronous（同步的）, callback-based（回调方式） 和 promise-based（基于 promise的）(使用 myHook.tap(), myHook.tapAsync() 和 myHook.tapPromise() 注册)。它将并行的执行每一个异步方法。</p>
+</li>
+</ul>
+<p>钩子的类型可以从它的名字中看出来，比如，<strong>AsyncSeriesWaterfallHook</strong> 可以注册异步的方法，串行的执行，每个函数的返回值会传递给下一个方法。</p>
+<h3 id="Interception-监听"><a href="#Interception-监听" class="headerlink" title="Interception (监听)"></a>Interception (监听)</h3><p>所有的钩子提供一个监听的接口：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">myCar.hooks.calculateRoutes.intercept(&#123;</span><br><span class="line">  call: <span class="function">(<span class="params">source, target, routesList</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">"Starting to calculate routes"</span>);</span><br><span class="line">  &#125;,</span><br><span class="line">  register: <span class="function">(<span class="params">tapInfo</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// tapInfo = &#123; type: "promise", name: "GoogleMapsPlugin", fn: ... &#125;</span></span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">`<span class="subst">$&#123;tapInfo.name&#125;</span> is doing its job`</span>);</span><br><span class="line">    <span class="keyword">return</span> tapInfo; <span class="comment">// may return a new tapInfo object</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><strong>call</strong>: (…args) =&gt; void 添加 call 到监听器，当钩子执行的时候会被触发。这里可以获取到钩子的参数。</p>
+<p><strong>tap</strong>: (tap: Tap) =&gt; void 添加 tap 到监听器，当插件注册到钩子的时候会被触发。参数是 Tap 对象，这个对象可以被改变。</p>
+<p><strong>loop</strong>: (…args) =&gt; void 添加 loop 到监听器，会在每个 looping 钩子循环的时候被触发。</p>
+<p><strong>register</strong>: (tap: Tap) =&gt; Tap | undefined 添加 register 到监听器，每当注册新的方法的时候会被触发，还可以修改它。</p>
+<h3 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h3><p>插件和监听器可以选择性的接受一个 context（上下文）对象，这个对象可以用来传递任意的值给接下来的插件和监听器。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">myCar.hooks.accelerate.intercept(&#123;</span><br><span class="line">  context: <span class="literal">true</span>,</span><br><span class="line">  tap: <span class="function">(<span class="params">context, tapInfo</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// tapInfo = &#123; type: "sync", name: "NoisePlugin", fn: ... &#125;</span></span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">`<span class="subst">$&#123;tapInfo.name&#125;</span> is doing it's job`</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// `context` starts as an empty object if at least one plugin uses `context: true`.</span></span><br><span class="line">    <span class="comment">// If no plugins use `context: true`, then `context` is undefined.</span></span><br><span class="line">    <span class="keyword">if</span> (context) &#123;</span><br><span class="line">      <span class="comment">// Arbitrary properties can be added to `context`, which plugins can then access.</span></span><br><span class="line">      context.hasMuffler = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">myCar.hooks.accelerate.tap(&#123;</span><br><span class="line">  name: <span class="string">"NoisePlugin"</span>,</span><br><span class="line">  context: <span class="literal">true</span></span><br><span class="line">&#125;, (context, newSpeed) =&gt; &#123;</span><br><span class="line">  <span class="keyword">if</span> (context &amp;&amp; context.hasMuffler) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">"Silence..."</span>);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">"Vroom!"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="HookMap"><a href="#HookMap" class="headerlink" title="HookMap"></a>HookMap</h3><p>HookMap 是一个辅助类，以 Map（es6的一种新数据结构，<a href="http://caibaojian.com/es6/set-map.html" target="_blank" rel="noopener">文档</a>）的方式保存所有的钩子。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> keyedHook = <span class="keyword">new</span> HookMap(<span class="function"><span class="params">key</span> =&gt;</span> <span class="keyword">new</span> SyncHook([<span class="string">"arg"</span>]))</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">keyedHook.for(<span class="string">"some-key"</span>).tap(<span class="string">"MyPlugin"</span>, (arg) =&gt; &#123; <span class="comment">/* ... */</span> &#125;);</span><br><span class="line">keyedHook.for(<span class="string">"some-key"</span>).tapAsync(<span class="string">"MyPlugin"</span>, (arg, callback) =&gt; &#123; <span class="comment">/* ... */</span> &#125;);</span><br><span class="line">keyedHook.for(<span class="string">"some-key"</span>).tapPromise(<span class="string">"MyPlugin"</span>, (arg) =&gt; &#123; <span class="comment">/* ... */</span> &#125;);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> hook = keyedHook.get(<span class="string">"some-key"</span>);</span><br><span class="line"><span class="keyword">if</span>(hook !== <span class="literal">undefined</span>) &#123;</span><br><span class="line">  hook.callAsync(<span class="string">"arg"</span>, err =&gt; &#123; <span class="comment">/* ... */</span> &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Hook-HookMap-interface"><a href="#Hook-HookMap-interface" class="headerlink" title="Hook/HookMap interface"></a>Hook/HookMap interface</h3><p>Public:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">interface Hook &#123;</span><br><span class="line">  tap: <span class="function">(<span class="params">name: string | Tap, fn: (context?, ...args</span>) =&gt;</span> Result) =&gt; <span class="keyword">void</span>,</span><br><span class="line">  tapAsync: <span class="function">(<span class="params">name: string | Tap, fn: (context?, ...args, callback: (err, result: Result</span>) =&gt;</span> <span class="keyword">void</span>) =&gt; <span class="keyword">void</span>) =&gt; <span class="keyword">void</span>,</span><br><span class="line">  tapPromise: <span class="function">(<span class="params">name: string | Tap, fn: (context?, ...args</span>) =&gt;</span> <span class="built_in">Promise</span>&lt;Result&gt;) =&gt; <span class="keyword">void</span>,</span><br><span class="line">  intercept: <span class="function">(<span class="params">interceptor: HookInterceptor</span>) =&gt;</span> <span class="keyword">void</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">interface HookInterceptor &#123;</span><br><span class="line">  call: <span class="function">(<span class="params">context?, ...args</span>) =&gt;</span> <span class="keyword">void</span>,</span><br><span class="line">  loop: <span class="function">(<span class="params">context?, ...args</span>) =&gt;</span> <span class="keyword">void</span>,</span><br><span class="line">  tap: <span class="function">(<span class="params">context?, tap: Tap</span>) =&gt;</span> <span class="keyword">void</span>,</span><br><span class="line">  register: <span class="function">(<span class="params">tap: Tap</span>) =&gt;</span> Tap,</span><br><span class="line">  context: boolean</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">interface HookMap &#123;</span><br><span class="line">  <span class="keyword">for</span>: <span class="function">(<span class="params">key: any</span>) =&gt;</span> Hook,</span><br><span class="line">  intercept: <span class="function">(<span class="params">interceptor: HookMapInterceptor</span>) =&gt;</span> <span class="keyword">void</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">interface HookMapInterceptor &#123;</span><br><span class="line">  factory: <span class="function">(<span class="params">key: any, hook: Hook</span>) =&gt;</span> Hook</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">interface Tap &#123;</span><br><span class="line">  name: string,</span><br><span class="line">  type: string</span><br><span class="line">  fn: <span class="built_in">Function</span>,</span><br><span class="line">  stage: number,</span><br><span class="line">  context: boolean,</span><br><span class="line">  before?: string | <span class="built_in">Array</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Protected (只用拥有这类钩子的类可以使用):</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">interface Hook &#123;</span><br><span class="line">  isUsed: <span class="function"><span class="params">()</span> =&gt;</span> boolean,</span><br><span class="line">  call: <span class="function">(<span class="params">...args</span>) =&gt;</span> Result,</span><br><span class="line">  promise: <span class="function">(<span class="params">...args</span>) =&gt;</span> <span class="built_in">Promise</span>&lt;Result&gt;,</span><br><span class="line">  callAsync: <span class="function">(<span class="params">...args, callback: (err, result: Result</span>) =&gt;</span> <span class="keyword">void</span>) =&gt; <span class="keyword">void</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">interface HookMap &#123;</span><br><span class="line">  <span class="keyword">get</span>: (key: any) =&gt; Hook | undefined,</span><br><span class="line">  for: (key: any) =&gt; Hook</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="MultiHook"><a href="#MultiHook" class="headerlink" title="MultiHook"></a>MultiHook</h3><p>一个类似 Hook 的类，用来重定向 taps 到其他的钩子。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; MultiHook &#125; = <span class="built_in">require</span>(<span class="string">"tapable"</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">this</span>.hooks.allHooks = <span class="keyword">new</span> MultiHook([<span class="keyword">this</span>.hooks.hookA, <span class="keyword">this</span>.hooks.hookB]);</span><br></pre></td></tr></table></figure>
+
+<h2 id="二、深化用法和意义"><a href="#二、深化用法和意义" class="headerlink" title="二、深化用法和意义"></a>二、深化用法和意义</h2><p>以上就是 <a href="https://github.com/webpack/tapable/tree/tapable-1" target="_blank" rel="noopener">webpack/tapable tapable-1分支</a>的文档说明，下面将通过几个小例子，进一步来说明 tapable 的钩子的用法；</p>
+<h3 id="钩子基础用法"><a href="#钩子基础用法" class="headerlink" title="钩子基础用法"></a>钩子基础用法</h3><p>不讨论 context 和 Interception 的话，添加钩子分为两部：</p>
+<ul>
+<li><ol>
+<li>在一个类上添加钩子属性（最佳实践是，把所有的钩子属性放到对象 hooks 属性中），这个钩子有一个可选的数组类型的参数，这表示后续所有添加在这个钩子上的事件（或者说插件），都会接受这个参数列表个数的参数，具体参数的值，是通过事件（插件）的触发时指明，这里没有指定参数，如：<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SomeObj</span> </span>&#123;</span><br><span class="line">  <span class="keyword">constructor</span>() &#123;</span><br><span class="line">    <span class="keyword">this</span>.hooks = &#123;</span><br><span class="line">      someHooks: <span class="keyword">new</span> SyncHook(),</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  doSome() &#123;</span><br><span class="line">    <span class="keyword">this</span>.hooks.someHooks.call();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+</li>
+<li><ol start="2">
+<li>在实例化的对象上，添加不同的插件到对应的钩子上（三种添加方式：tap,tapAsync, tapPromise，不同钩子有所限制），如：</li>
+</ol>
+</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> instanceObj = <span class="keyword">new</span> SomeObj();</span><br><span class="line">instanceObj.someHooks.tap(<span class="string">"plugin1"</span>, () =&gt; &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'在instaneObj 的 someHooks 上添加了一个插件'</span>);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><ol start="3">
+<li>实例在执行一个方法的时候，触发钩子，会调用这个钩子上的所有插件执行。</li>
+</ol>
+</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 同时 plugin1 会执行</span></span><br><span class="line">instanceObj.doSome();</span><br></pre></td></tr></table></figure>
+
+<h3 id="最简单的钩子——SyncHook"><a href="#最简单的钩子——SyncHook" class="headerlink" title="最简单的钩子——SyncHook"></a>最简单的钩子——SyncHook</h3><p>SyncHook 应该算是所有钩子中最简单的一种了：同步的，按顺序连续执行，没有返回值；</p>
+<p>看下面代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; SyncHook &#125; = <span class="built_in">require</span>(<span class="string">"tapable"</span>);</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Car</span> </span>&#123;</span><br><span class="line">  <span class="keyword">constructor</span>() &#123;</span><br><span class="line">    <span class="keyword">this</span>.hooks = &#123;</span><br><span class="line">      accelerate: <span class="keyword">new</span> SyncHook([<span class="string">"newSpeed"</span>])</span><br><span class="line">    &#125;;</span><br><span class="line">  &#125;</span><br><span class="line">  setSpeed(newSpeed) &#123;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    (function anonymous(newSpeed) &#123;</span></span><br><span class="line"><span class="comment">        "use strict";</span></span><br><span class="line"><span class="comment">        var _context;</span></span><br><span class="line"><span class="comment">        var _x = this._x;</span></span><br><span class="line"><span class="comment">        var _fn0 = _x[0];</span></span><br><span class="line"><span class="comment">        _fn0(newSpeed);</span></span><br><span class="line"><span class="comment">        var _fn1 = _x[1];</span></span><br><span class="line"><span class="comment">        _fn1(newSpeed);</span></span><br><span class="line"><span class="comment">      &#125;)</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">this</span>.hooks.accelerate.call(newSpeed);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> myCar = <span class="keyword">new</span> Car();</span><br><span class="line"></span><br><span class="line">myCar.hooks.accelerate.tap(<span class="string">"Plugin1"</span>, newSpeed =&gt;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">`Accelerating to `</span> + newSpeed)</span><br><span class="line">);</span><br><span class="line">myCar.hooks.accelerate.tap(<span class="string">"Plugin2"</span>, newSpeed =&gt;</span><br><span class="line">  <span class="built_in">console</span>.warn(<span class="string">'speed too fast'</span>)</span><br><span class="line">);</span><br><span class="line">myCar.setSpeed(<span class="number">100</span>);</span><br></pre></td></tr></table></figure>
+
+<p>首先声明了一个 Car 的类，Car 的类中有 setSpeed 方法，同时添加一个类型为 SyncHook 的 accelerate 钩子，这个例子，就是 accelerate 上添加的所有事件，都会接受一个参数——newSpeed。</p>
+<p>然后实例化一个对象 —— myCar，在 myCar 的 accelerate 钩子上添加了两个事件：Plugin1 和 Plugin2，两个插件的事件都会接受一个 newSpeed参数。</p>
+<p>调用 myCar 上的 setSpeed 方法，setSpeed 方法内通过 <strong>this.hooks.accelerate.call(newSpeed)</strong> 触发钩子函数，Plugin1 和 Plugin2 方法会依次执行。</p>
+<p><strong>注意</strong> ：这里的 call 并不是 ES6 的 call 的用法了，所有的钩子都继承了 <strong>Hook</strong> 这个类，在这个类里，重新定义了 call 属性的含义，也就是每个钩子的 call 都会执行 Hook 上的 call 函数，截取了部分关键代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Hook</span> </span>&#123;</span><br><span class="line">  <span class="keyword">constructor</span>(args) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">this</span>.call = <span class="keyword">this</span>._call;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">Object</span>.defineProperties(Hook.prototype, &#123;</span><br><span class="line">  _call: &#123;</span><br><span class="line">    value: createCompileDelegate(<span class="string">"call"</span>, <span class="string">"sync"</span>),</span><br><span class="line">    configurable: <span class="literal">true</span>,</span><br><span class="line">    writable: <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>在 this.hooks.accelerate.call(newSpeed) 的时候，如何触发钩子上面的所有方法呢？ 答案是通过构造函数 —— new Function()，在执行 call 后首先根据不同的钩子类型，生成不同的代码，通过代码构造出一个方法，来执行钩子上的所有插件的方法，在这个例子中，通过 debug，发现构造出的函数如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">anonymous</span>(<span class="params">newSpeed</span>) </span>&#123;</span><br><span class="line"><span class="meta">  "use strict"</span>;</span><br><span class="line">  <span class="keyword">var</span> _context;</span><br><span class="line">  <span class="keyword">var</span> _x = <span class="keyword">this</span>._x;</span><br><span class="line">  <span class="keyword">var</span> _fn0 = _x[<span class="number">0</span>];</span><br><span class="line">  _fn0(newSpeed);</span><br><span class="line">  <span class="keyword">var</span> _fn1 = _x[<span class="number">1</span>];</span><br><span class="line">  _fn1(newSpeed);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的 this 指向 this.hooks.accelerate，this._x 就是所有的插件的方法组成的数组，看到例子中有两个插件，生成的方法中，两个插件也依次执行了，并在执行时传入了钩子初始化时指定的参数 —— newSpeed；</p>
+<p>这样就达到了前面提到的目标 —— 触发钩子上的所有插件的事件。</p>
+<p>不同的钩子，执行的逻辑大同小异，就是构造出的执行插件方法的函数有所区别而已。</p>
+<h3 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h3><p>webpack 也正是利用这个基础模块所提供的丰富的钩子函数实现其插件功能，有了插件功能，webpack 就变得非常具有可扩展性和定制性。 </p>
+<!-- 
+插件是 webpack 的支柱功能。webpack 自身也是构建于，你在 webpack 配置中用到的相同的插件系统之上！
+
+插件目的在于解决 loader 无法实现的其他事。 -->
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/10/23/svg动画开发实践/" rel="next" title="svg动画开发实践(1)">
+                  <i class="fa fa-chevron-left"></i> svg动画开发实践(1)
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="gitalk-container"></div>
+  
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、基本文档翻译"><span class="nav-number">1.</span> <span class="nav-text">一、基本文档翻译</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用方式"><span class="nav-number">1.1.</span> <span class="nav-text">使用方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hook-类型"><span class="nav-number">1.2.</span> <span class="nav-text">Hook 类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Interception-监听"><span class="nav-number">1.3.</span> <span class="nav-text">Interception (监听)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Context"><span class="nav-number">1.4.</span> <span class="nav-text">Context</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HookMap"><span class="nav-number">1.5.</span> <span class="nav-text">HookMap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hook-HookMap-interface"><span class="nav-number">1.6.</span> <span class="nav-text">Hook/HookMap interface</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MultiHook"><span class="nav-number">1.7.</span> <span class="nav-text">MultiHook</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、深化用法和意义"><span class="nav-number">2.</span> <span class="nav-text">二、深化用法和意义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#钩子基础用法"><span class="nav-number">2.1.</span> <span class="nav-text">钩子基础用法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#最简单的钩子——SyncHook"><span class="nav-number">2.2.</span> <span class="nav-text">最简单的钩子——SyncHook</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#结语"><span class="nav-number">2.3.</span> <span class="nav-text">结语</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Robin</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Robin</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.1"></script><script src="/js/motion.js?v=7.4.1"></script>
+<script src="/js/schemes/pisces.js?v=7.4.1"></script>
+<script src="/js/next-boot.js?v=7.4.1"></script><script src="/js/bookmark.js?v=7.4.1"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="/js/local-search.js?v=7.4.1"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: 'afa2a9b070b3b3285557',
+      clientSecret: 'd097552f9b5531c31969d715f575dd8d151d94e9',
+      repo: 'robin',
+      owner: 'MuffinYu',
+      admin: ['MuffinYu'],
+      id: '9db148774a64cb9be3d79b813d4d2d04',
+        language: window.navigator.language || window.navigator.userLanguage,
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
+
+</body>
+</html>

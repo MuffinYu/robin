@@ -64,7 +64,7 @@
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://www.muffinyu.com/2019/10/23/svg动画开发实践/check-circle.gif">
 <meta property="og:image" content="https://www.muffinyu.com/2019/10/23/svg动画开发实践/stroke-dasharray.png">
-<meta property="og:updated_time" content="2019-10-24T12:35:53.078Z">
+<meta property="og:updated_time" content="2019-10-27T09:37:54.321Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="svg动画开发实践(1)">
 <meta name="twitter:description" content="SVG 是一种开放标准的矢量图形语言，即表示可缩放矢量图形（Scalable Vector Graphics）格式，是由万维网联盟（W3C）开发并进行维护的。">
@@ -275,7 +275,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-10-24 20:35:53" itemprop="dateModified" datetime="2019-10-24T20:35:53+08:00">2019-10-24</time>
+                <time title="修改时间：2019-10-27 17:37:54" itemprop="dateModified" datetime="2019-10-27T17:37:54+08:00">2019-10-27</time>
               </span>
             
           
@@ -433,7 +433,7 @@
 <p>添加动画样式，改变其 stroke-dashoffset 属性，就可以看到线条的颜色在变化：</p>
 <figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.svg1</span> <span class="selector-tag">line</span> &#123;</span><br><span class="line">    <span class="attribute">stroke-dasharray</span>:<span class="number">300</span>,<span class="number">300</span>;</span><br><span class="line">    <span class="attribute">stroke-dashoffset</span>:<span class="number">300</span>;</span><br><span class="line">    <span class="comment">/* transition:all 2s linear; */</span></span><br><span class="line">    <span class="attribute">animation</span>: stroke <span class="number">1s</span> <span class="built_in">cubic-bezier</span>(0.65, 0, 0.45, 1) forwards infinite;</span><br><span class="line">&#125;</span><br><span class="line">@<span class="keyword">keyframes</span> stroke &#123;</span><br><span class="line">  100% &#123;</span><br><span class="line">    <span class="attribute">stroke-dashoffset</span>: <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p><a href="https://github.com/MuffinYu/robin/tree/hexo/example/checkmark.html" target="_blank" rel="noopener">示例代码</a></p>
+<p><a href="https://github.com/MuffinYu/robin/tree/hexo/example/svg-animation/checkmark.html" target="_blank" rel="noopener">示例代码</a></p>
 <h4 id="2-描边动画实战"><a href="#2-描边动画实战" class="headerlink" title="2. 描边动画实战"></a>2. 描边动画实战</h4><p>回到最开始的动画，在设计好 SVG代码后，可以看到图案呈现这个样子：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">svg</span> <span class="attr">class</span>=<span class="string">"checkmark"</span> <span class="attr">xmlns</span>=<span class="string">"http://www.w3.org/2000/svg"</span> <span class="attr">viewBox</span>=<span class="string">"0 0 52 52"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">circle</span> <span class="attr">class</span>=<span class="string">"checkmark__circle"</span> <span class="attr">cx</span>=<span class="string">"26"</span> <span class="attr">cy</span>=<span class="string">"26"</span> <span class="attr">r</span>=<span class="string">"25"</span> <span class="attr">fill</span>=<span class="string">"none"</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">path</span> <span class="attr">class</span>=<span class="string">"checkmark__check"</span> <span class="attr">fill</span>=<span class="string">"none"</span> <span class="attr">d</span>=<span class="string">"M14.1 27.2l7.1 7.2 16.7-16.8"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">svg</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
@@ -578,6 +578,10 @@
 
             <div class="post-nav-prev post-nav-item">
               
+                <a href="/2019/10/27/Webpack的基石——tapable/" rel="prev" title="Webpack的基石——tapable">
+                  Webpack的基石——tapable <i class="fa fa-chevron-right"></i>
+                </a>
+              
             </div>
           </div>
         
@@ -641,7 +645,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-count">12</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
