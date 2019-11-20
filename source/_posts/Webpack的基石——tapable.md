@@ -435,7 +435,3 @@ function anonymous(newSpeed) {
 ### 结语
 
 webpack 也正是利用这个基础模块所提供的丰富的钩子函数实现其插件功能，有了插件功能，webpack 就变得非常具有可扩展性和定制性。 
-<!-- 
-插件是 webpack 的支柱功能。webpack 自身也是构建于，你在 webpack 配置中用到的相同的插件系统之上！
-
-插件目的在于解决 loader 无法实现的其他事。 -->

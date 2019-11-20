@@ -303,7 +303,7 @@
 <h3 id="实现方式"><a href="#实现方式" class="headerlink" title="实现方式"></a>实现方式</h3><ol>
 <li>通过Google的 (CDN)[<a href="https://unpkg.com/]" target="_blank" rel="noopener">https://unpkg.com/]</a> ，在页面的script标签中加载Babel包，如下 ：</li>
 </ol>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script src=<span class="string">"https://unpkg.com/@babel/standalone/babel.min.js"</span>&gt;&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script src=<span class="string">"https://unpkg.com/@babel/standalone/babel.min.js"</span>&gt;<span class="xml"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span></span><br></pre></td></tr></table></figure>
 
 <p>  这样在浏览器的window全局对象里，就会注册一个Babel对象，在这个对象中，有包含transform（编译）、registerPlugin（注册插件）、registerPreset（注册preset）等方法，而在这个需求中，所需要的就是 transform 和 registerPlugin 两个方法了。</p>
 <ol start="2">
@@ -422,7 +422,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-count">15</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
