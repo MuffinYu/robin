@@ -3,7 +3,7 @@ title: ES6新语法解析和ES5实现
 date: 2019-10-29 19:51:52
 tags:
 ---
-ES6
+ES6 常见语法解析
 
 <!-- more -->
 
@@ -152,7 +152,7 @@ sanmao.bark();
 ```
 
 - 创建一个新对象obj；
-- 把 obj 的 _\_proto__ 指向 Dog.prototype 实现继承；
+- 把 obj 的 \__proto__ 指向 Dog.prototype 实现继承；
 - 执行构造函数，传递参数，改变this指向 ：Dog.call(obj, ...args)；
 - 若 Dog 函数的返回值是对象，则返回该对象，否则返回 obj；
 - 最后把 obj 赋值给sanmao；
@@ -167,7 +167,7 @@ function _new(fn, ...arg) {
 ```
 ### Object.create
 
-Object.create()方法创建一个新对象，使用现有的对象来提供新创建的对象的__proto__；
+Object.create()方法创建一个新对象，使用现有的对象来提供新创建的对象的\__proto__；
 > 请注意，尽管在 ES5 中 Object.create 支持设置为 [[Prototype]] 为 null，但因为那些ECMAScript5以前版本限制，此 polyfill 无法支持该特性。
 ```javascript
 if (typeof Object.create !== "function") {
@@ -187,9 +187,9 @@ if (typeof Object.create !== "function") {
 }
 ```
 
-### prototype、_\_proto__
+### prototype、\_\_proto__
 
-当谈到继承时，JavaScript 只有一种结构：对象。每个实例对象（ object ）都有一个私有属性（称之为 **_\_proto__** ）指向它的构造函数的原型对象（ **prototype** ）。该原型对象也有一个自己的原型对象( **_\_proto__** ) ，层层向上直到一个对象的原型对象为 null。根据定义，null 没有原型，并作为这个**原型链**中的最后一个环节。
+当谈到继承时，JavaScript 只有一种结构：对象。每个实例对象（ object ）都有一个私有属性（称之为 **\_\_proto__** ）指向它的构造函数的原型对象（ **prototype** ）。该原型对象也有一个自己的原型对象( **\_\_proto__** ) ，层层向上直到一个对象的原型对象为 null。根据定义，null 没有原型，并作为这个**原型链**中的最后一个环节。
 
 在 JavaScript 中，函数（function）是允许拥有属性的。所有的函数会有一个特别的属性 —— **prototype** 。
 

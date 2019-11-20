@@ -60,7 +60,7 @@
   <entry>
     <title>JS工具函数</title>
     <url>/2019/10/31/JS%E5%B7%A5%E5%85%B7%E5%87%BD%E6%95%B0/</url>
-    <content><![CDATA[<p>节流、防抖等原理和实现</p>
+    <content><![CDATA[<p>节流、防抖、对象拷贝、函数柯里化、双向数据绑定、图片懒加载、深度优先和广度优先遍历等原理和实现。</p>
 <a id="more"></a>
 
 <h3 id="防抖"><a href="#防抖" class="headerlink" title="防抖"></a>防抖</h3><h4 id="1-原理"><a href="#1-原理" class="headerlink" title="1. 原理"></a>1. 原理</h4><ul>
@@ -140,7 +140,7 @@
   <entry>
     <title>ES6新语法解析和ES5实现</title>
     <url>/2019/10/29/ES6%E6%96%B0%E8%AF%AD%E6%B3%95%E8%A7%A3%E6%9E%90%E5%92%8CES5%E5%AE%9E%E7%8E%B0/</url>
-    <content><![CDATA[<p>ES6</p>
+    <content><![CDATA[<p>ES6 常见语法解析</p>
 <a id="more"></a>
 
 <h3 id="call、apply-和-bind"><a href="#call、apply-和-bind" class="headerlink" title="call、apply 和 bind"></a>call、apply 和 bind</h3><ol>
@@ -207,20 +207,20 @@
 
 <ul>
 <li>创建一个新对象obj；</li>
-<li>把 obj 的 <em>\</em>proto__ 指向 Dog.prototype 实现继承；</li>
+<li>把 obj 的 _<em>proto_</em> 指向 Dog.prototype 实现继承；</li>
 <li>执行构造函数，传递参数，改变this指向 ：Dog.call(obj, …args)；</li>
 <li>若 Dog 函数的返回值是对象，则返回该对象，否则返回 obj；</li>
 <li>最后把 obj 赋值给sanmao；</li>
 </ul>
 <h4 id="2-实现"><a href="#2-实现" class="headerlink" title="2. 实现"></a>2. 实现</h4><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">_new</span>(<span class="params">fn, ...arg</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> obj = <span class="built_in">Object</span>.create(fn.prototype);</span><br><span class="line">  <span class="keyword">const</span> ret = fn.apply(obj, arg);</span><br><span class="line">  <span class="keyword">return</span> ret <span class="keyword">instanceof</span> <span class="built_in">Object</span> ? ret : obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h3 id="Object-create"><a href="#Object-create" class="headerlink" title="Object.create"></a>Object.create</h3><p>Object.create()方法创建一个新对象，使用现有的对象来提供新创建的对象的<strong>proto</strong>；</p>
+<h3 id="Object-create"><a href="#Object-create" class="headerlink" title="Object.create"></a>Object.create</h3><p>Object.create()方法创建一个新对象，使用现有的对象来提供新创建的对象的__proto__；</p>
 <blockquote>
 <p>请注意，尽管在 ES5 中 Object.create 支持设置为 [[Prototype]] 为 null，但因为那些ECMAScript5以前版本限制，此 polyfill 无法支持该特性。</p>
 </blockquote>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="keyword">typeof</span> <span class="built_in">Object</span>.create !== <span class="string">"function"</span>) &#123;</span><br><span class="line">    <span class="built_in">Object</span>.create = <span class="function"><span class="keyword">function</span> (<span class="params">proto, propertiesObject</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">typeof</span> proto !== <span class="string">'object'</span> &amp;&amp; <span class="keyword">typeof</span> proto !== <span class="string">'function'</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">TypeError</span>(<span class="string">'Object prototype may only be an Object: '</span> + proto);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (proto === <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">"This browser's implementation of Object.create is a shim and doesn't support 'null' as the first argument."</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">typeof</span> propertiesObject != <span class="string">'undefined'</span>) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">"This browser's implementation of Object.create is a shim and doesn't support a second argument."</span>);</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">function</span> <span class="title">F</span>(<span class="params"></span>) </span>&#123;&#125;</span><br><span class="line">        F.prototype = proto;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> F();</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h3 id="prototype、-proto"><a href="#prototype、-proto" class="headerlink" title="prototype、\proto__"></a>prototype、<em>\</em>proto__</h3><p>当谈到继承时，JavaScript 只有一种结构：对象。每个实例对象（ object ）都有一个私有属性（称之为 <strong><em>\</em>proto__</strong> ）指向它的构造函数的原型对象（ <strong>prototype</strong> ）。该原型对象也有一个自己的原型对象( <strong><em>\</em>proto__</strong> ) ，层层向上直到一个对象的原型对象为 null。根据定义，null 没有原型，并作为这个<strong>原型链</strong>中的最后一个环节。</p>
+<h3 id="prototype、-proto"><a href="#prototype、-proto" class="headerlink" title="prototype、__proto__"></a>prototype、__proto__</h3><p>当谈到继承时，JavaScript 只有一种结构：对象。每个实例对象（ object ）都有一个私有属性（称之为 <strong>__proto__</strong> ）指向它的构造函数的原型对象（ <strong>prototype</strong> ）。该原型对象也有一个自己的原型对象( <strong>__proto__</strong> ) ，层层向上直到一个对象的原型对象为 null。根据定义，null 没有原型，并作为这个<strong>原型链</strong>中的最后一个环节。</p>
 <p>在 JavaScript 中，函数（function）是允许拥有属性的。所有的函数会有一个特别的属性 —— <strong>prototype</strong> 。</p>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">doSomething</span>(<span class="params"></span>)</span>&#123;&#125;</span><br><span class="line"><span class="built_in">console</span>.log( doSomething.prototype );</span><br><span class="line"><span class="comment">// 和声明函数的方式无关，</span></span><br><span class="line"><span class="comment">// JavaScript 中的函数永远有一个默认原型属性。</span></span><br><span class="line"><span class="keyword">var</span> doSomething = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;&#125;;</span><br><span class="line"><span class="built_in">console</span>.log( doSomething.prototype );</span><br></pre></td></tr></table></figure>
 
