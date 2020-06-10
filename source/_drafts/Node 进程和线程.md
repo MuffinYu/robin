@@ -32,7 +32,7 @@ modified: '2020-01-07T03:02:17.274Z'
 
 #### 4.1 进程间通信方式与 IPC
 
-  - 进程间痛惜信技术： 命名管道、匿名管道、socket、信号量、共享内存、消息队列、Domain Socket等；
+  - 进程间通信技术： 命名管道、匿名管道、socket、信号量、共享内存、消息队列、Domain Socket等；
 
   - IPC： Inter-Process Commumication，采用管道（pipe()）技术，这个‘管道’是个抽象层面的称呼，具体实现细节由 libuv 提供，在 window 下由命名管道（named pipe）实现，\*unix 系统则采用 *Unix Domain Socket* 实现；在应用层上的进程间通信只有简单的 message() 事件和 send() 方法，通过 *process.send* 发送消息，通过监听 *message* 事件接收消息；
 
