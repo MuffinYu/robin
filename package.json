@@ -15,7 +15,7 @@
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.4.3",
     "@babel/register": "^7.4.0",
-    "browser-sync": "^2.26.7",
+    "browser-sync": "^2.26.13",
     "gulp": "^4.0.0",
     "gulp-babel": "^8.0.0",
     "gulp-less": "^4.0.1",
@@ -29,8 +29,8 @@
     "del": "^4.1.1",
     "ejs": "^2.6.1",
     "gulp-ejs": "^3.3.0",
-    "lodash": "^4.17.15",
-    "marked": "^0.6.2",
+    "lodash": "^4.17.20",
+    "marked": "^1.2.7",
     "prismjs": "^1.16.0"
   },
   "babel": {
