@@ -31,7 +31,7 @@
     "gulp-ejs": "^3.3.0",
     "lodash": "^4.17.20",
     "marked": "^1.2.7",
-    "prismjs": "^1.16.0"
+    "prismjs": "^1.22.0"
   },
   "babel": {
     "presets": [
