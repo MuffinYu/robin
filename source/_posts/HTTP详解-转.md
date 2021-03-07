@@ -86,7 +86,7 @@ FIN：表示通知对方本端要关闭连接了
 
 2.HTTP请求实例
 来看看实际的HTTP请求例子：
-![HTTP请求流程](./http-detail-9.jpg)
+![HTTP请求流程](./http-detail-8.jpg)
 
 
 ①是请求方法，HTTP/1.1 定义的请求方法有8种：GET、POST、PUT、DELETE、PATCH、HEAD、OPTIONS、TRACE,最常的两种GET和POST，如果是RESTful接口的话一般会用到GET、POST、DELETE、PUT
@@ -102,16 +102,16 @@ Referer：先前网页的地址，表示此请求来自哪里，有些网站会�
 服务器在收到客户端请求处理完需要响应并返回给客户端，而HTTP响应报文结构与请求结构体一致。
 
 1.HTTP响应报文结构
-![HTTP请求流程](./http-detail-10.jpg)
+![HTTP请求流程](./http-detail-9.jpg)
 
 
 2.HTTP响应实例
-![HTTP请求流程](./http-detail-11.jpg)
+![HTTP请求流程](./http-detail-10.jpg)
 
 
 3.响应状态码
 响应报文中我们重点关注下：服务器的响应状态码，面试也很容易问到，下面猪哥只列出分类，详细状态码自行上网查找了解。
-![HTTP请求流程](./http-detail-12.jpg)
+![HTTP请求流程](./http-detail-11.jpg)
 
 
 ### 六、断开连接
@@ -137,7 +137,7 @@ ps：大家不要小看这一个TCP连接，在一次客户端HTTP完整的请�
 
 3.断开连接过程
 在建立TCP连接时是三次握手，而断开TCP连接是四次挥手！
-![HTTP请求流程](./http-detail-13.jpg)
+![HTTP请求流程](./http-detail-12.jpg)
 
 在前面讲TCP/IP协议时我们说过标志位：FIN表示通知对方本端要关闭连接了，**那断开连接为何需要四次挥手呢？**这里给大家的课后作业，可以在留言中给出你的理解，看看是否正确。
 
@@ -146,7 +146,7 @@ ps：大家不要小看这一个TCP连接，在一次客户端HTTP完整的请�
 面试官：为何建立连接需要三次握手而关闭连接却需要四次挥手。给大家的课后作业，在留言中给出你的见解！
 
 2.http2.0
-图片描述
+![HTTP请求流程](./http-detail-13.jpg)
 HTTP/1.1已经为我们服务了20年，而HTTP/2.0其实在2015就发布了，但是还没有推广开来，关于HTTP/2.0新特性大家也可以去网上查阅相关资料
 
 3.http&rpc
